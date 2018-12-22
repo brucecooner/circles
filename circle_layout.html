@@ -1,0 +1,288 @@
+<html>
+
+<head>
+<title>svg min</title>
+
+<!--
+TODO:
+* color picker?
+* multiple stages
+*	define "stage"
+*	stage renderer
+* sliders to numbers
+* stage "component"
+*	accordions?
+*	re-arrangeable?
+* save business
+
+-->
+
+<style>
+body {
+    width:100%;
+    height:100%;
+    margin: 0px 0px 0px 0px;
+    /* background-color:blue; */
+}
+
+.menuBarClass {
+    
+    position:fixed;
+    float:right;
+    right:0px;
+    top:0px;
+    border-width:0px 0px 2px 2px;
+    border-color:black;
+    border-style:solid;
+    border-bottom-left-radius: 3px;
+    background-color:red;
+    padding: 2px;
+}
+
+.menuBarClass button {
+    display:block;
+    border-radius: 3px;
+}
+
+</style>
+
+<script type="application/javascript" src="jquery-3.1.1.min.js"></script>
+<script src="libs/fnc2d.js"></script>
+<script src="libs/my2d.js"></script>
+<script src="libs/myRangeInput.js"></script>
+<script src="libs/WatchedValue.js"></script>
+
+
+<script type="application/javascript">
+
+var view_width;
+var view_height;
+
+var x_translate = 0;
+var y_translate = 0;
+
+const default_number_of_spokes = 6;
+const default_spoke_length = 100;
+const default_circle_radius = 50;
+
+var number_of_spokes = WatchedValue.Create(default_number_of_spokes,
+      [function(value) {   console.log("num spokes = " + value);
+                            render();
+                           }]);
+
+var spoke_length = WatchedValue.Create(default_spoke_length,
+      [function(value) {   console.log("spoke length = " + value);
+                            render();
+                           }]);
+
+var circle_radius = WatchedValue.Create(default_circle_radius,
+      [function(value) {   console.log("spoke length = " + value);
+                            render();
+                           }]);
+
+// --------------------------------------------------------------------
+$(document).ready( function()
+{
+    // --- DUCTWORK ---
+    // num circles
+    let numSpokesRangeCallback = myRangeInput.createRange({id:'numSpokesId',
+        containerId:'numSpokesRangeContainer',
+        onInputHandler:number_of_spokes.set,
+        initialValue:default_number_of_spokes,
+        min:2, max:12, step:1})
+
+    // hook range input up to external changes in num spokes value
+    number_of_spokes.addSetCallback(numSpokesRangeCallback);
+
+    // spoke length
+    let spokeLengthRangeCallback = myRangeInput.createRange({id:'spokeLengthId',
+        containerId:'spokeLengthRangeContainer',
+        onInputHandler:spoke_length.set,
+        initialValue:default_spoke_length,
+        min:0, max:500, step:1})
+
+    // hook range input up to external changes in num spokes value
+    spoke_length.addSetCallback(spokeLengthRangeCallback);
+
+    // <div id="circleRadiusRangeContainer"></div>
+    // circle radius
+    let circleRadiusRangeCallback = myRangeInput.createRange({id:'circleRadiusId',
+        containerId:'circleRadiusRangeContainer',
+        onInputHandler:circle_radius.set,
+        initialValue:default_circle_radius,
+        min:5, max:500, step:1})
+
+    // hook range input up to external changes in num spokes value
+    circle_radius.addSetCallback(circleRadiusRangeCallback);
+
+    render();
+});
+
+// --------------------------------------------------------------------
+function onBodyLoad()
+{
+    view_width = window.innerWidth;
+    view_height = window.innerHeight;
+
+    // $("#mySVG")[0].viewBox.baseVal.width = view_width;
+    // $("#mySVG")[0].viewBox.baseVal.height = view_height
+
+    // $("#mySVG")[0].viewBox.baseVal.x = -view_width / 2;
+    // $("#mySVG")[0].viewBox.baseVal.y = -view_height / 2;
+
+    // $("#mySVG")[0].addEventListener("wheel", onWheel);
+};
+
+// --------------------------------------------------------------------
+function onWheel()
+{
+    // console.log(arguments[0].deltaY);
+    // deltaY = arguments[0].deltaY;
+
+    // if (deltaY < 0) // forward
+    // {
+    //     zoomIn();
+    // }
+    // else // back
+    // {
+    //     zoomOut();
+    // }
+};
+
+
+// --------------------------------------------------------------------
+function logStats()
+{
+    console.log( "viewbox width: " + $("#mySVG")[0].viewBox.baseVal.width );
+    console.log( "viewbox height: " + $("#mySVG")[0].viewBox.baseVal.height );
+}
+
+// --------------------------------------------------------------------
+function zoomIn()
+{
+    $("#mySVG")[0].viewBox.baseVal.width -= 10;
+    $("#mySVG")[0].viewBox.baseVal.height -= 10;
+
+    logStats();
+}
+
+// --------------------------------------------------------------------
+function zoomOut()
+{
+    $("#mySVG")[0].viewBox.baseVal.width += 10;
+    $("#mySVG")[0].viewBox.baseVal.height += 10;
+
+    logStats();
+}
+
+// --------------------------------------------------------------------
+function show_svg(evt) {
+    var svg = document.getElementById("mySVG");
+    var serializer = new XMLSerializer();
+    var svg_blob = new Blob([serializer.serializeToString(svg)],
+                            {'type': "image/svg+xml"});
+    var url = URL.createObjectURL(svg_blob);
+
+//<a href="/images/myw3schoolsimage.jpg" download> 
+$("#menuBarId").append( $(`<a href=${url} download="test_svg.svg">linky</a>`));
+
+    // later... revokeObjectURL();
+    // var svg_win = window.open(url, "svg_win");
+}
+
+// --------------------------------------------------------------------
+function svg_line(x1, y1, x2, y2)
+{
+    return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" style="stroke:rgb(0,0,0);stroke-width:2" />`;
+}
+
+// --------------------------------------------------------------------
+function svg_circle(x, y, r)
+{
+    return `<circle cx="${x}" cy="${y}" r="${r}" stroke="red" stroke-width="3" fill="none" />`;
+}
+
+// --------------------------------------------------------------------
+function generate_svg()
+{
+    var radius = 50;
+    // var $svg = $("svg");
+    var width = view_width;
+    var height = view_height;
+    var x = -view_width / 2;
+    var y = -view_height / 2;
+
+    var svg_elem = `<svg width="100%" height="100%" id="mySVG" viewbox="${x} ${y} ${width} ${height}">`;
+
+    var current_center = new fnc2d.Point(0, -spoke_length.get());
+
+    var rotation = my2d.TWO_PI / number_of_spokes.get();
+
+    svg_elem += svg_line(-100, 0, 100, 0);
+    svg_elem += svg_line(0, -100, 0, 100);
+
+
+    for (var current_spoke = 0; current_spoke < number_of_spokes.get(); current_spoke += 1)
+    {
+        var current_circle = svg_circle(current_center.x, current_center.y, circle_radius.get());
+        
+        svg_elem += current_circle;
+
+        current_center = current_center.rotate(rotation);
+    }
+
+    // svg_elem += svg_circle( 0, 100, 50);
+
+    svg_elem += "</svg>";
+
+    // $svg.append($('<circle cx="50" cy="50" r="40" stroke="black" stroke-width="3" fill="none" />'));
+
+    // $("body").append(svg_elem);
+    return svg_elem;
+};
+
+// --------------------------------------------------------------------
+function render()
+{
+    $("#mySVG").remove();
+
+    var svg_elem = generate_svg();
+
+    $("body").append(svg_elem);
+}
+
+</script>
+
+</head>
+
+<!-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  -->
+<body onload="onBodyLoad()">
+
+<div class="menuBarClass" id="menuBarId">
+    <div id="numSpokesRangeContainer"></div>
+    <div id="spokeLengthRangeContainer"></div>
+    <div id="circleRadiusRangeContainer"></div>
+</div> 
+
+
+<!-- <svg width="100%" height="100%" id="mySVG" viewbox="0 0 110 110"> -->
+<!-- <g> -->
+<!-- crosshairs -->
+<!--
+<line x1="-100" y1="0" x2="100" y2="0" style="stroke:rgb(0,0,0);stroke-width:2" />
+<line x1="-0" y1="-100" x2="0" y2="100" style="stroke:rgb(0,0,0);stroke-width:2" />
+-->
+
+<!--
+<line x1="10" y1="10" x2="100" y2="10" style="stroke:rgb(255,0,0);stroke-width:2" />
+<line x1="100" y1="10" x2="100" y2="100" style="stroke:rgb(0,255,0);stroke-width:2" />
+<line x1="100" y1="100" x2="10" y2="100" style="stroke:rgb(0,0,255);stroke-width:2" />
+<line x1="10" y1="100" x2="10" y2="10" style="stroke:rgb(0,255,255);stroke-width:2" />
+-->
+
+<!-- </g> -->
+<!-- </svg> -->
+
+</body>
+
+</html>
