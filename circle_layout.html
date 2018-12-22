@@ -6,19 +6,20 @@
 <!--
 TODO:
 SOON...
-* spoke offset
+* no dupes if spoke length == 0
 * sliders to numbers (but it's fuuuun this way)
+	-just need method for preCISE control
 * save business
-	- specify filename
-* window resize handling
+	- cancellation
 
 LESS SOON...
-* line support?
 * multiple stages
 	-define "stage"
 	-stage renderer
 * svg features support
+	- lines
 	- layers
+* window resize handling (is ok for now)
 
 LATER...
 *	layers?
@@ -76,6 +77,8 @@ body {
 <script src="libs/WatchedValue.js"></script>
 <script src="modalize.js"></script>
 
+<script src="save_dialog.js"></script>
+
 
 <script type="application/javascript">
 
@@ -127,7 +130,7 @@ $(document).ready( function()
         containerId:'numSpokesRangeContainer',
         onInputHandler:number_of_spokes.set,
         initialValue:default_number_of_spokes,
-        min:2, max:12, step:1})
+        min:1, max:12, step:1})
 
     number_of_spokes.addSetCallback(numSpokesRangeCallback);
 
@@ -145,7 +148,7 @@ $(document).ready( function()
         containerId:'spokeRotOffsetRangeContainer', 
         onInputHandler:spoke_rot_offset.set,
         initialValue:default_spoke_rot_offset,
-        min:0, max:my2d.TWO_PI / 4, step:0.01})
+        min:0, max:my2d.TWO_PI, step:0.01})
 
     spoke_rot_offset.addSetCallback(spokeRotOffsetRangeCallback);
 
@@ -298,17 +301,6 @@ var svg_blob_url = null;
 var svg_file_version = 1;
 
 // ----------------------------------------------------------------------------
-function onSaveLinkClick()
-{
-	console.log("save link clicked");
-
-	svg_blob_url = null;
-
-	// modalize.done();
-	save_modal.dismiss();
-}
-
-// ----------------------------------------------------------------------------
 function OnSave()
 {
 	// TODO: move to function?
@@ -318,19 +310,7 @@ function OnSave()
 	}
 	svg_blob_url = show_svg();
 
-	var $modal_content = $("<div>hello</div>");
-	$modal_content.css( {	"position":"absolute",
-									"left":"10px",
-									"top":"10px",
-									"background-color":"rgb(100,100,100)"});
-
-	$svg_link = $(`<a href="${svg_blob_url}" onclick="onSaveLinkClick()" download="testrevoke_svg_${svg_file_version}.svg">click to download</a>`);
-
-	$modal_content.append($svg_link);
-
-	$modal_content.attr("id", "foo");
-
-	save_modal = new modalize.modal($("body"), $modal_content, "save_link");
+	save_modal = openSaveDialog(svg_blob_url);
 }
 
 </script>
