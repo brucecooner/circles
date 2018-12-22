@@ -5,16 +5,29 @@
 
 <!--
 TODO:
-* color picker?
-* multiple stages
-*	define "stage"
-*	stage renderer
+SOON...
+* stroke width
+* spoke offset
 * sliders to numbers
-* stage "component"
-*	accordions?
-*	re-arrangeable?
 * save business
+	- specify filename
 
+LESS SOON...
+* line support?
+* multiple stages
+	-define "stage"
+	-stage renderer
+* svg features support
+	- layers
+
+LATER...
+*	layers?
+* color picker?
+* stage "component"
+	-accordions?
+	-re-arrangeable?
+WAY LATER...
+* animation
 -->
 
 <style>
@@ -44,6 +57,16 @@ body {
     border-radius: 3px;
 }
 
+.modal {
+	width:50%;
+	height:50%;
+	color:white;
+	background-color:rgb(0,0,0);
+	position:fixed;
+	left:0px;
+	top:0px;
+}
+
 </style>
 
 <script type="application/javascript" src="jquery-3.1.1.min.js"></script>
@@ -51,6 +74,7 @@ body {
 <script src="libs/my2d.js"></script>
 <script src="libs/myRangeInput.js"></script>
 <script src="libs/WatchedValue.js"></script>
+<script src="modalize.js"></script>
 
 
 <script type="application/javascript">
@@ -123,38 +147,18 @@ function onBodyLoad()
 {
     view_width = window.innerWidth;
     view_height = window.innerHeight;
-
-    // $("#mySVG")[0].viewBox.baseVal.width = view_width;
-    // $("#mySVG")[0].viewBox.baseVal.height = view_height
-
-    // $("#mySVG")[0].viewBox.baseVal.x = -view_width / 2;
-    // $("#mySVG")[0].viewBox.baseVal.y = -view_height / 2;
-
-    // $("#mySVG")[0].addEventListener("wheel", onWheel);
 };
 
 // --------------------------------------------------------------------
 function onWheel()
 {
-    // console.log(arguments[0].deltaY);
-    // deltaY = arguments[0].deltaY;
-
-    // if (deltaY < 0) // forward
-    // {
-    //     zoomIn();
-    // }
-    // else // back
-    // {
-    //     zoomOut();
-    // }
 };
-
 
 // --------------------------------------------------------------------
 function logStats()
 {
-    console.log( "viewbox width: " + $("#mySVG")[0].viewBox.baseVal.width );
-    console.log( "viewbox height: " + $("#mySVG")[0].viewBox.baseVal.height );
+   //  console.log( "viewbox width: " + $("#mySVG")[0].viewBox.baseVal.width );
+   //  console.log( "viewbox height: " + $("#mySVG")[0].viewBox.baseVal.height );
 }
 
 // --------------------------------------------------------------------
@@ -176,18 +180,18 @@ function zoomOut()
 }
 
 // --------------------------------------------------------------------
-function show_svg(evt) {
+function show_svg() {
     var svg = document.getElementById("mySVG");
     var serializer = new XMLSerializer();
     var svg_blob = new Blob([serializer.serializeToString(svg)],
                             {'type': "image/svg+xml"});
-    var url = URL.createObjectURL(svg_blob);
+    var object_url = URL.createObjectURL(svg_blob);
 
-//<a href="/images/myw3schoolsimage.jpg" download> 
-$("#menuBarId").append( $(`<a href=${url} download="test_svg.svg">linky</a>`));
+	// $("#menuBarId").append( $(`<a href=${url} download="test_svg.svg">linky</a>`));
 
     // later... revokeObjectURL();
-    // var svg_win = window.open(url, "svg_win");
+	 // var svg_win = window.open(url, "svg_win");
+	 return object_url;
 }
 
 // --------------------------------------------------------------------
@@ -199,7 +203,7 @@ function svg_line(x1, y1, x2, y2)
 // --------------------------------------------------------------------
 function svg_circle(x, y, r)
 {
-    return `<circle cx="${x}" cy="${y}" r="${r}" stroke="red" stroke-width="3" fill="none" />`;
+    return `<circle cx="${x}" cy="${y}" r="${r}" stroke="red" stroke-width="5" fill="none" />`;
 }
 
 // --------------------------------------------------------------------
@@ -218,8 +222,8 @@ function generate_svg()
 
     var rotation = my2d.TWO_PI / number_of_spokes.get();
 
-    svg_elem += svg_line(-100, 0, 100, 0);
-    svg_elem += svg_line(0, -100, 0, 100);
+   //  svg_elem += svg_line(-100, 0, 100, 0);
+   //  svg_elem += svg_line(0, -100, 0, 100);
 
 
     for (var current_spoke = 0; current_spoke < number_of_spokes.get(); current_spoke += 1)
@@ -251,6 +255,55 @@ function render()
     $("body").append(svg_elem);
 }
 
+//----------------------------------------------------------------------
+function modal()
+{
+	var $dialog = $('<div class="modal">hello</div>');
+	$("body").append($dialog);
+}
+
+// TODO: move upward
+var save_modal = null;
+var svg_blob_url = null;
+
+var svg_file_version = 1;
+
+// ----------------------------------------------------------------------------
+function onSaveLinkClick()
+{
+	console.log("save link clicked");
+
+	svg_blob_url = null;
+
+	// modalize.done();
+	save_modal.dismiss();
+}
+
+// ----------------------------------------------------------------------------
+function OnSave()
+{
+	// TODO: move to function?
+	if (svg_blob_url)
+	{
+		window.URL.revokeObjectURL(svg_blob_url);
+	}
+	svg_blob_url = show_svg();
+
+	var $modal_content = $("<div>hello</div>");
+	$modal_content.css( {	"position":"absolute",
+									"left":"10px",
+									"top":"10px",
+									"background-color":"rgb(100,100,100)"});
+
+	$svg_link = $(`<a href="${svg_blob_url}" onclick="onSaveLinkClick()" download="testrevoke_svg_${svg_file_version}.svg">click to download</a>`);
+
+	$modal_content.append($svg_link);
+
+	$modal_content.attr("id", "foo");
+
+	save_modal = new modalize.modal($("body"), $modal_content, "save_link");
+}
+
 </script>
 
 </head>
@@ -261,8 +314,9 @@ function render()
 <div class="menuBarClass" id="menuBarId">
     <div id="numSpokesRangeContainer"></div>
     <div id="spokeLengthRangeContainer"></div>
-    <div id="circleRadiusRangeContainer"></div>
-</div> 
+	 <div id="circleRadiusRangeContainer"></div>
+	<button onclick="OnSave()">save</button>
+</div>
 
 
 <!-- <svg width="100%" height="100%" id="mySVG" viewbox="0 0 110 110"> -->
