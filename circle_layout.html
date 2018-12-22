@@ -6,11 +6,11 @@
 <!--
 TODO:
 SOON...
-* stroke width
 * spoke offset
-* sliders to numbers
+* sliders to numbers (but it's fuuuun this way)
 * save business
 	- specify filename
+* window resize handling
 
 LESS SOON...
 * line support?
@@ -87,7 +87,11 @@ var y_translate = 0;
 
 const default_number_of_spokes = 6;
 const default_spoke_length = 100;
+const default_spoke_rot_offset = 0;
+
 const default_circle_radius = 50;
+
+const default_stroke_width = 5;
 
 var number_of_spokes = WatchedValue.Create(default_number_of_spokes,
       [function(value) {   console.log("num spokes = " + value);
@@ -104,6 +108,16 @@ var circle_radius = WatchedValue.Create(default_circle_radius,
                             render();
                            }]);
 
+var stroke_width = WatchedValue.Create(default_stroke_width,
+		[function(value) {	console.log("stroke width = " + value);
+									render();
+									}]);
+
+var spoke_rot_offset = WatchedValue.Create(default_spoke_rot_offset,
+		[function(value) {	console.log("spoke rot offset = " + value);
+									render();
+									}]);
+
 // --------------------------------------------------------------------
 $(document).ready( function()
 {
@@ -115,7 +129,6 @@ $(document).ready( function()
         initialValue:default_number_of_spokes,
         min:2, max:12, step:1})
 
-    // hook range input up to external changes in num spokes value
     number_of_spokes.addSetCallback(numSpokesRangeCallback);
 
     // spoke length
@@ -125,10 +138,17 @@ $(document).ready( function()
         initialValue:default_spoke_length,
         min:0, max:500, step:1})
 
-    // hook range input up to external changes in num spokes value
     spoke_length.addSetCallback(spokeLengthRangeCallback);
 
-    // <div id="circleRadiusRangeContainer"></div>
+    // spoke rot offset
+    let spokeRotOffsetRangeCallback = myRangeInput.createRange({id:'spokeRotOffsetId',
+        containerId:'spokeRotOffsetRangeContainer', 
+        onInputHandler:spoke_rot_offset.set,
+        initialValue:default_spoke_rot_offset,
+        min:0, max:my2d.TWO_PI / 4, step:0.01})
+
+    spoke_rot_offset.addSetCallback(spokeRotOffsetRangeCallback);
+
     // circle radius
     let circleRadiusRangeCallback = myRangeInput.createRange({id:'circleRadiusId',
         containerId:'circleRadiusRangeContainer',
@@ -136,8 +156,16 @@ $(document).ready( function()
         initialValue:default_circle_radius,
         min:5, max:500, step:1})
 
-    // hook range input up to external changes in num spokes value
     circle_radius.addSetCallback(circleRadiusRangeCallback);
+
+    // stroke width
+    let strokeWidthRangeCallback = myRangeInput.createRange({id:'strokeWidthId',
+        containerId:'strokeWidthRangeContainer',
+        onInputHandler:stroke_width.set,
+        initialValue:default_stroke_width,
+        min:1, max:20, step:1})
+
+    stroke_width.addSetCallback(strokeWidthRangeCallback);
 
     render();
 });
@@ -201,16 +229,15 @@ function svg_line(x1, y1, x2, y2)
 }
 
 // --------------------------------------------------------------------
-function svg_circle(x, y, r)
+function svg_circle(x, y, r, s)
 {
-    return `<circle cx="${x}" cy="${y}" r="${r}" stroke="red" stroke-width="5" fill="none" />`;
+    return `<circle cx="${x}" cy="${y}" r="${r}" stroke="red" stroke-width="${s}" fill="none" />`;
 }
 
 // --------------------------------------------------------------------
 function generate_svg()
 {
-    var radius = 50;
-    // var $svg = $("svg");
+   //  var radius = 50;
     var width = view_width;
     var height = view_height;
     var x = -view_width / 2;
@@ -218,7 +245,7 @@ function generate_svg()
 
     var svg_elem = `<svg width="100%" height="100%" id="mySVG" viewbox="${x} ${y} ${width} ${height}">`;
 
-    var current_center = new fnc2d.Point(0, -spoke_length.get());
+    var current_center = new fnc2d.Point(0, -spoke_length.get()).rotate(spoke_rot_offset.get());
 
     var rotation = my2d.TWO_PI / number_of_spokes.get();
 
@@ -228,7 +255,9 @@ function generate_svg()
 
     for (var current_spoke = 0; current_spoke < number_of_spokes.get(); current_spoke += 1)
     {
-        var current_circle = svg_circle(current_center.x, current_center.y, circle_radius.get());
+        var current_circle = svg_circle(	current_center.x, current_center.y, 
+		  												circle_radius.get(),
+														stroke_width.get());
         
         svg_elem += current_circle;
 
@@ -312,9 +341,11 @@ function OnSave()
 <body onload="onBodyLoad()">
 
 <div class="menuBarClass" id="menuBarId">
-    <div id="numSpokesRangeContainer"></div>
-    <div id="spokeLengthRangeContainer"></div>
-	 <div id="circleRadiusRangeContainer"></div>
+    <div id="numSpokesRangeContainer">num</div>
+    <div id="spokeLengthRangeContainer">length</div>
+	 <div id="spokeRotOffsetRangeContainer">rot</div>
+	 <div id="circleRadiusRangeContainer">radius</div>
+	 <div id="strokeWidthRangeContainer">stroke</div>
 	<button onclick="OnSave()">save</button>
 </div>
 
