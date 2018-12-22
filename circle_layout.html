@@ -6,7 +6,7 @@
 <!--
 TODO:
 SOON...
-* no dupes if spoke length == 0
+* no dupes if spoke length == 0 ?
 * sliders to numbers (but it's fuuuun this way)
 	-just need method for preCISE control
 * save business
@@ -130,7 +130,7 @@ $(document).ready( function()
         containerId:'numSpokesRangeContainer',
         onInputHandler:number_of_spokes.set,
         initialValue:default_number_of_spokes,
-        min:1, max:12, step:1})
+        min:1, max:100, step:1})
 
     number_of_spokes.addSetCallback(numSpokesRangeCallback);
 
