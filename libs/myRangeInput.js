@@ -26,7 +26,8 @@ myRangeInput = {
          // ---------------------------------------
          function myInputHandler(evt)
          {
-            let myOuterHandler = config.onInputHandler
+				let myOuterHandler = config.onInputHandler
+				
 
             elem = evt.target
             value = parseFloat(elem.value)
@@ -45,7 +46,28 @@ myRangeInput = {
          { newRangeEl.step = config.step }
 
          if (config.hasOwnProperty('initialValue'))
-         { newRangeEl.value = config.initialValue }
+			{ newRangeEl.value = config.initialValue }
+			
+			if (config.hasOwnProperty('wheelStep'))
+			{ 
+				newRangeEl.addEventListener("wheel", function(evt) {
+					deltaY = evt.deltaY;
+
+					var currentValue = parseFloat(newRangeEl.value);
+
+					if (deltaY < 0) // forward
+					{
+						currentValue += config.wheelStep;
+					}
+					else // back
+					{
+						currentValue -= config.wheelStep;
+					}
+
+					newRangeEl.value = currentValue;
+					config.onInputHandler( currentValue, newRangeEl.id);
+			  });
+			}
 
          containerEl.appendChild(newRangeEl)
 

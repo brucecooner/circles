@@ -6,7 +6,6 @@
 <!--
 TODO:
 SOON...
-* no dupes if spoke length == 0 ?
 * sliders to numbers (but it's fuuuun this way)
 	-just need method for preCISE control
 * save business
@@ -97,7 +96,7 @@ const default_circle_radius = 50;
 const default_stroke_width = 5;
 
 var number_of_spokes = WatchedValue.Create(default_number_of_spokes,
-      [function(value) {   console.log("num spokes = " + value);
+		[function(value) {   console.log("num spokes = " + value);
                             render();
                            }]);
 
@@ -107,7 +106,7 @@ var spoke_length = WatchedValue.Create(default_spoke_length,
                            }]);
 
 var circle_radius = WatchedValue.Create(default_circle_radius,
-      [function(value) {   console.log("spoke length = " + value);
+      [function(value) {   console.log("radius = " + value);
                             render();
                            }]);
 
@@ -129,7 +128,8 @@ $(document).ready( function()
     let numSpokesRangeCallback = myRangeInput.createRange({id:'numSpokesId',
         containerId:'numSpokesRangeContainer',
         onInputHandler:number_of_spokes.set,
-        initialValue:default_number_of_spokes,
+		  initialValue:default_number_of_spokes,
+		  wheelStep:1,
         min:1, max:100, step:1})
 
     number_of_spokes.addSetCallback(numSpokesRangeCallback);
@@ -138,7 +138,8 @@ $(document).ready( function()
     let spokeLengthRangeCallback = myRangeInput.createRange({id:'spokeLengthId',
         containerId:'spokeLengthRangeContainer',
         onInputHandler:spoke_length.set,
-        initialValue:default_spoke_length,
+		  initialValue:default_spoke_length,
+		  wheelStep:1,
         min:0, max:500, step:1})
 
     spoke_length.addSetCallback(spokeLengthRangeCallback);
@@ -148,6 +149,7 @@ $(document).ready( function()
         containerId:'spokeRotOffsetRangeContainer', 
         onInputHandler:spoke_rot_offset.set,
         initialValue:default_spoke_rot_offset,
+		  wheelStep:my2d.TWO_PI / 360,
         min:0, max:my2d.TWO_PI, step:0.01})
 
     spoke_rot_offset.addSetCallback(spokeRotOffsetRangeCallback);
@@ -157,6 +159,7 @@ $(document).ready( function()
         containerId:'circleRadiusRangeContainer',
         onInputHandler:circle_radius.set,
         initialValue:default_circle_radius,
+		  wheelStep:1,
         min:5, max:500, step:1})
 
     circle_radius.addSetCallback(circleRadiusRangeCallback);
@@ -166,6 +169,7 @@ $(document).ready( function()
         containerId:'strokeWidthRangeContainer',
         onInputHandler:stroke_width.set,
         initialValue:default_stroke_width,
+		  wheelStep:1,
         min:1, max:20, step:1})
 
     stroke_width.addSetCallback(strokeWidthRangeCallback);
@@ -321,12 +325,14 @@ function OnSave()
 <body onload="onBodyLoad()">
 
 <div class="menuBarClass" id="menuBarId">
-    <div id="numSpokesRangeContainer">num</div>
-    <div id="spokeLengthRangeContainer">length</div>
-	 <div id="spokeRotOffsetRangeContainer">rot</div>
-	 <div id="circleRadiusRangeContainer">radius</div>
-	 <div id="strokeWidthRangeContainer">stroke</div>
-	<button onclick="OnSave()">save</button>
+	<table>
+		<tr><td id="numSpokesValueId">num</td><td id="numSpokesRangeContainer"></td></tr>
+		<tr><td>length</td><td id="spokeLengthRangeContainer"></td></tr>
+		<tr><td>rot</td><td id="spokeRotOffsetRangeContainer"></td></tr>
+		<tr><td>radius</td><td id="circleRadiusRangeContainer"></td></tr>
+		<tr><td>stroke</td><td id="strokeWidthRangeContainer"></td></tr>
+	</table>
+	 <button onclick="OnSave()">save</button>
 </div>
 
 
