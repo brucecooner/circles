@@ -1,20 +1,25 @@
 <html>
 
 <head>
-<title>svg min</title>
+<title>circles</title>
 
 <!--
 TODO:
 SOON...
-* sliders to numbers (but it's fuuuun this way)
-	-just need method for preCISE control
 * save business
 	- cancellation
+* styles to dedicated file
+* color picker?
+* remove layer
+* configurable layer names
+	-will users care about layer names?
+* way to highlight layer?
+* layer visibility
 
 LESS SOON...
 * multiple stages
 	-define "stage"
-	-stage renderer
+	-stage renderer?
 * svg features support
 	- lines
 	- layers
@@ -22,7 +27,6 @@ LESS SOON...
 
 LATER...
 *	layers?
-* color picker?
 * stage "component"
 	-accordions?
 	-re-arrangeable?
@@ -39,17 +43,35 @@ body {
 }
 
 .menuBarClass {
-    
-    position:fixed;
-    float:right;
-    right:0px;
-    top:0px;
-    border-width:0px 0px 2px 2px;
-    border-color:black;
-    border-style:solid;
-    border-bottom-left-radius: 3px;
-    background-color:red;
-    padding: 2px;
+	position:fixed;
+	float:right;
+	right:0px;
+	top:0px;
+	border-width:0px 0px 2px 2px;
+	border-color:black;
+	border-style:solid;
+	border-bottom-left-radius: 3px;
+	background-color:lightgray;
+	padding: 2px;
+}
+
+.layerListClass {
+	position:fixed;
+	float:left;
+	left:0px;
+	top:0px;
+	border-width:0px 2px 2px 0px;
+	border-color:black;
+	border-style:solid;
+	border-bottom-right-radius: 3px;
+	background-color:lightgray;
+	padding: 2px;
+	min-width:10%;
+}
+
+.layerListClass ul {
+	margin:2px;
+	padding:15px;
 }
 
 .menuBarClass button {
@@ -75,12 +97,15 @@ body {
 <script src="libs/myRangeInput.js"></script>
 <script src="libs/WatchedValue.js"></script>
 <script src="modalize.js"></script>
+<script src="svgee.js"></script>
 
-<script src="save_dialog.js"></script>
+<script type="application/javascript" src="layers.js"></script>
+<script type="application/javascript" src="save_dialog.js"></script>
 
 
 <script type="application/javascript">
 
+// ----- GLOBALS -----
 var view_width;
 var view_height;
 
@@ -90,39 +115,139 @@ var y_translate = 0;
 const default_number_of_spokes = 6;
 const default_spoke_length = 100;
 const default_spoke_rot_offset = 0;
-
 const default_circle_radius = 50;
-
 const default_stroke_width = 5;
+const default_stroke = "rgb(255,0,0)";
+
+var next_stroke = {r:100, g:0, b:0};
+var stroke_step = {r:5, g:5, b:5 };
+var next_name_index = 1;
+
+var default_circle_layer_config = 
+{
+	stroke: default_stroke,
+	radius: default_circle_radius,
+	number_of_spokes: default_number_of_spokes,
+	stroke_width: default_stroke_width,
+	spoke_length: default_spoke_length,
+	spoke_rot_offset: default_spoke_rot_offset,
+};
+
+var render_order = [];
+
+var Layers = new LayersNS.Layers();
 
 var number_of_spokes = WatchedValue.Create(default_number_of_spokes,
-		[function(value) {   console.log("num spokes = " + value);
-                            render();
-                           }]);
+		[function(value) {	console.log("num spokes = " + value);
+									getCurrentLayer().config.number_of_spokes = value;
+									render();
+								}]);
 
 var spoke_length = WatchedValue.Create(default_spoke_length,
-      [function(value) {   console.log("spoke length = " + value);
-                            render();
-                           }]);
+		[function(value) {   console.log("spoke length = " + value);
+									getCurrentLayer().config.spoke_length = value;
+									render();
+								}]);
 
 var circle_radius = WatchedValue.Create(default_circle_radius,
-      [function(value) {   console.log("radius = " + value);
-                            render();
-                           }]);
+		[function(value) {   console.log("radius = " + value);
+									getCurrentLayer().config.radius = value;
+									render();
+								}]);
 
 var stroke_width = WatchedValue.Create(default_stroke_width,
 		[function(value) {	console.log("stroke width = " + value);
+									getCurrentLayer().config.stroke_width = value;
 									render();
 									}]);
 
 var spoke_rot_offset = WatchedValue.Create(default_spoke_rot_offset,
 		[function(value) {	console.log("spoke rot offset = " + value);
+									getCurrentLayer().config.spoke_rot_offset = value;
 									render();
 									}]);
 
+// --------------------------------------------------------
+function syncRangeInputs(circle_layer_config)
+{
+	$("#numSpokesId")[0].value = circle_layer_config.number_of_spokes;
+	$("#spokeLengthId")[0].value = circle_layer_config.spoke_length;
+	$("#spokeRotOffsetId")[0].value = circle_layer_config.spoke_rot_offset;
+	$("#circleRadiusId")[0].value = circle_layer_config.radius;
+	$("#strokeWidthId")[0].value = circle_layer_config.stroke_width;
+};
+
+// ----------------------------------------------------------------------------
+function setCurrentLayer(layer_name)
+{
+	console.log("setting layer to " + layer_name);
+
+	Layers.setCurrentLayer(layer_name);
+
+	syncRangeInputs(Layers.getCurrentLayer().config);
+}
+
+// ----------------------------------------------------------------------------
+function getCurrentLayer()
+{
+	return Layers.getCurrentLayer();
+}
+
+// --------------------------------------------------------------------
+function getNextName()
+{
+	var name = "c" + next_name_index;
+
+	next_name_index += 1;
+
+	return name;
+}
+
+// --------------------------------------------------------------------
+function getNextStroke()
+{
+	// var stroke = `"rgb(next_stroke.r, next_stroke.g, next_stroke.b)"`;
+
+	var red = Math.random() * 255;
+	var green = Math.random() * 255;
+	var blue = Math.random() * 255;
+
+	// var stroke = "rgb(200,0,0)";
+	var stroke = `rgb(${red},${green},${blue})`;
+
+	return stroke;
+}
+
+// --------------------------------------------------------------------
+function addLayer()
+{
+	var new_config = default_circle_layer_config;
+	
+	new_config.stroke = getNextStroke();
+	var next_name = getNextName();
+
+	Layers.addCircleLayer( next_name, new_config );
+	render_order.push(next_name);
+
+	var $list_item = $(`<li data-layer="${next_name}">${next_name}</li>`);
+	$list_item.css({"background-color":new_config.stroke });
+	$list_item.click( () => setCurrentLayer($list_item.attr("data-layer")) );
+	
+	$("#layerListId #addLayerButtonId").before($list_item);
+
+	return next_name;
+}
+
+// --------------------------------------------------------------------
+// --------------------------------------------------------------------
 // --------------------------------------------------------------------
 $(document).ready( function()
 {
+	// ---- DATA INIT ----
+	var new_layer_name = addLayer();
+
+	Layers.setCurrentLayer(new_layer_name);
+
     // --- DUCTWORK ---
     // num circles
     let numSpokesRangeCallback = myRangeInput.createRange({id:'numSpokesId',
@@ -230,55 +355,48 @@ function show_svg() {
 }
 
 // --------------------------------------------------------------------
-function svg_line(x1, y1, x2, y2)
+function generate_layer(circle_layer_config)
 {
-    return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" style="stroke:rgb(0,0,0);stroke-width:2" />`;
-}
+	var current_config = circle_layer_config.config;
 
-// --------------------------------------------------------------------
-function svg_circle(x, y, r, s)
-{
-    return `<circle cx="${x}" cy="${y}" r="${r}" stroke="red" stroke-width="${s}" fill="none" />`;
+	var svg_elem = "";
+
+	var current_center = new fnc2d.Point(0, -current_config.spoke_length).rotate(current_config.spoke_rot_offset);
+
+	var rotation = my2d.TWO_PI / current_config.number_of_spokes;
+
+	for (var current_spoke = 0; current_spoke < current_config.number_of_spokes; current_spoke += 1)
+	{
+		var current_circle = svgee.circle(	current_center.x, current_center.y, 
+															current_config.radius,
+															{ stroke_width:current_config.stroke_width, stroke:current_config.stroke });
+
+		svg_elem += current_circle;
+
+		current_center = current_center.rotate(rotation);
+	}
+	
+	return svg_elem;
 }
 
 // --------------------------------------------------------------------
 function generate_svg()
 {
-   //  var radius = 50;
     var width = view_width;
     var height = view_height;
     var x = -view_width / 2;
     var y = -view_height / 2;
 
-    var svg_elem = `<svg width="100%" height="100%" id="mySVG" viewbox="${x} ${y} ${width} ${height}">`;
+	 var svg_elem = `<svg width="100%" height="100%" id="mySVG" viewbox="${x} ${y} ${width} ${height}">`;
 
-    var current_center = new fnc2d.Point(0, -spoke_length.get()).rotate(spoke_rot_offset.get());
+	render_order.forEach( (current_name) =>
+	{
+		svg_elem += generate_layer(Layers.getLayer(current_name));
+	});
 
-    var rotation = my2d.TWO_PI / number_of_spokes.get();
+	svg_elem += "</svg>";
 
-   //  svg_elem += svg_line(-100, 0, 100, 0);
-   //  svg_elem += svg_line(0, -100, 0, 100);
-
-
-    for (var current_spoke = 0; current_spoke < number_of_spokes.get(); current_spoke += 1)
-    {
-        var current_circle = svg_circle(	current_center.x, current_center.y, 
-		  												circle_radius.get(),
-														stroke_width.get());
-        
-        svg_elem += current_circle;
-
-        current_center = current_center.rotate(rotation);
-    }
-
-    // svg_elem += svg_circle( 0, 100, 50);
-
-    svg_elem += "</svg>";
-
-    // $svg.append($('<circle cx="50" cy="50" r="40" stroke="black" stroke-width="3" fill="none" />'));
-
-    // $("body").append(svg_elem);
-    return svg_elem;
+	return svg_elem;
 };
 
 // --------------------------------------------------------------------
@@ -292,11 +410,11 @@ function render()
 }
 
 //----------------------------------------------------------------------
-function modal()
-{
-	var $dialog = $('<div class="modal">hello</div>');
-	$("body").append($dialog);
-}
+// function modal()
+// {
+// 	var $dialog = $('<div class="modal">hello</div>');
+// 	$("body").append($dialog);
+// }
 
 // TODO: move upward
 var save_modal = null;
@@ -305,7 +423,7 @@ var svg_blob_url = null;
 var svg_file_version = 1;
 
 // ----------------------------------------------------------------------------
-function OnSave()
+function onSave()
 {
 	// TODO: move to function?
 	if (svg_blob_url)
@@ -317,6 +435,15 @@ function OnSave()
 	save_modal = openSaveDialog(svg_blob_url);
 }
 
+// ----------------------------------------------------------------------------
+function onAddLayer()
+{
+	addLayer();
+	render();
+
+	console.log(render_order);
+}
+
 </script>
 
 </head>
@@ -324,6 +451,11 @@ function OnSave()
 <!-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  -->
 <body onload="onBodyLoad()">
 
+<div class="layerListClass">
+	<ul id="layerListId">		
+		<button id="addLayerButtonId" onclick="onAddLayer()">add</button>
+	</ul>
+</div>
 <div class="menuBarClass" id="menuBarId">
 	<table>
 		<tr><td id="numSpokesValueId">num</td><td id="numSpokesRangeContainer"></td></tr>
@@ -332,7 +464,7 @@ function OnSave()
 		<tr><td>radius</td><td id="circleRadiusRangeContainer"></td></tr>
 		<tr><td>stroke</td><td id="strokeWidthRangeContainer"></td></tr>
 	</table>
-	 <button onclick="OnSave()">save</button>
+	 <button onclick="onSave()">save</button>
 </div>
 
 

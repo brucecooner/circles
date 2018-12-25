@@ -64,6 +64,7 @@ myRangeInput = {
 						currentValue -= config.wheelStep;
 					}
 
+					currentValue = Math.min( Math.max(currentValue, config.min), config.max);
 					newRangeEl.value = currentValue;
 					config.onInputHandler( currentValue, newRangeEl.id);
 			  });
