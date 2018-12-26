@@ -121,7 +121,9 @@ var LayersNS =
 			}
 			else
 			{
-				this.layers[name] = new LayerTypes.CircleLayer(circle_layer_config);
+				var new_circle_layer = new LayerTypes.CircleLayer(circle_layer_config);
+				new_circle_layer.name = name;
+				this.layers[name] = new_circle_layer;
 			}
 
 			console.log("total layers: " + Object.keys(Layers.layers).length);

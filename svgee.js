@@ -47,7 +47,8 @@ var svgee =
 								 r="${r}"
 								 stroke="${_style.stroke}"
 								 stroke-width="${_style.stroke_width}"
-								 fill="${_style.fill}" />`;
+								 fill="${_style.fill}" 
+								 opacity="1.0"/>`;
 	},
 	
 	// -------------------------------------------------------------------------

@@ -14,6 +14,7 @@ SOON...
 * configurable layer names
 	-will users care about layer names?
 * way to highlight layer?
+* clone layer?
 * layer visibility
 
 LESS SOON...
@@ -79,6 +80,26 @@ body {
     border-radius: 3px;
 }
 
+#addLayerButtonId {
+	background-color:lightcoral;
+	border-radius:7px;
+	border-width:0px;
+	margin:2px;
+	/* padding:2px; */
+	/* border-color:maroon; */
+	/* border-style:solid;
+	border-color:black;
+	border-width:2px; */
+}
+
+#addLayerButtonId:hover {
+	background-color:red;
+}
+
+#addLayerButtonId:hover::after {
+	content:" add";
+}
+
 .modal {
 	width:50%;
 	height:50%;
@@ -136,6 +157,8 @@ var default_circle_layer_config =
 var render_order = [];
 
 var Layers = new LayersNS.Layers();
+
+var highlighted_layer = "";
 
 var number_of_spokes = WatchedValue.Create(default_number_of_spokes,
 		[function(value) {	console.log("num spokes = " + value);
@@ -232,10 +255,53 @@ function addLayer()
 	var $list_item = $(`<li data-layer="${next_name}">${next_name}</li>`);
 	$list_item.css({"background-color":new_config.stroke });
 	$list_item.click( () => setCurrentLayer($list_item.attr("data-layer")) );
+	$list_item.mouseover( (evt) =>
+	{ 
+		highlightLayer(next_name); 
+	} );
+	$list_item.mouseout( (evt) => {
+		highlightLayer("");
+	} );
 	
 	$("#layerListId #addLayerButtonId").before($list_item);
 
 	return next_name;
+}
+
+// --------------------------------------------------------------------
+function highlightLayer(layer_name)
+{
+	console.log(`highlighting layer: "${layer_name}`);
+
+	highlighted_layer = layer_name;
+
+	if (layer_name.length == 0)
+	{
+		$(`#mySVG g`).attr("opacity", "1.0");
+	}
+	else
+	{
+		// $("#mySVG g").each( (index) =>
+		// {
+		// 	console.log(index);
+		// 	console.log(`processing layer: ${$(this).attr("data-layer-name")}`);
+		// });
+		$("#mySVG g").each( function(index) 
+		{ 
+			var cur_layer = $(this).attr("data-layer-name")
+			console.log(cur_layer);
+
+			var cur_opacity = cur_layer === highlighted_layer ? 1.0 : 0.25;
+
+			$(this).attr("opacity", cur_opacity);
+		});
+		// render_order.forEach( (current_name) =>
+		// {
+		// 	var cur_opacity = (current_name == highlighted_layer) ? 1.0 : 0.5;
+
+		// 	$(`#mySVG g[data-layer-name=${current_name}]`).attr("opacity", `"${cur_opacity}"`);
+		// });
+	}
 }
 
 // --------------------------------------------------------------------
@@ -355,13 +421,17 @@ function show_svg() {
 }
 
 // --------------------------------------------------------------------
-function generate_layer(circle_layer_config)
+function generate_layer(circle_layer)
 {
-	var current_config = circle_layer_config.config;
+	var current_config = circle_layer.config;
 
-	var svg_elem = "";
+	const degrees_per_radian = 360.0 / my2d.TWO_PI;
+	var rotate_degrees = current_config.spoke_rot_offset * degrees_per_radian;
+	var transform_attribute = `transform="rotate(${rotate_degrees})"`;
 
-	var current_center = new fnc2d.Point(0, -current_config.spoke_length).rotate(current_config.spoke_rot_offset);
+	var svg_elem = `<g data-layer-name="${circle_layer.name}" ${transform_attribute}>`;
+
+	var current_center = new fnc2d.Point(0, -current_config.spoke_length);
 
 	var rotation = my2d.TWO_PI / current_config.number_of_spokes;
 
@@ -375,6 +445,8 @@ function generate_layer(circle_layer_config)
 
 		current_center = current_center.rotate(rotation);
 	}
+
+	svg_elem += "</g>";
 	
 	return svg_elem;
 }
@@ -408,13 +480,6 @@ function render()
 
     $("body").append(svg_elem);
 }
-
-//----------------------------------------------------------------------
-// function modal()
-// {
-// 	var $dialog = $('<div class="modal">hello</div>');
-// 	$("body").append($dialog);
-// }
 
 // TODO: move upward
 var save_modal = null;
@@ -453,7 +518,7 @@ function onAddLayer()
 
 <div class="layerListClass">
 	<ul id="layerListId">		
-		<button id="addLayerButtonId" onclick="onAddLayer()">add</button>
+		<button id="addLayerButtonId" onclick="onAddLayer()">+</button>
 	</ul>
 </div>
 <div class="menuBarClass" id="menuBarId">
