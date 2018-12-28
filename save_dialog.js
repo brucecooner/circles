@@ -37,7 +37,7 @@ function openSaveDialog(svg_blob_url, save_click_handler)
 									"background-color":"rgb(100,100,100)"});
 
 	// $svg_link = $(`<a href="${svg_blob_url}" onclick="onSaveLinkClick()" download="testrevoke_svg_${svg_file_version}.svg">click to download</a>`);
-	var save_dialog = new modalize.modal($("body"), $modal_content, "save_link");
+	var save_dialog = new modalize.Create($("body"), $modal_content, "save_link");
 
 	// can plumb things now...
 	// this not great, maybe better way?

@@ -1,0 +1,53 @@
+<html>
+<head>
+<title>canvas color wheel test</title>
+
+<style>
+body {
+	width:100%;
+	height:100%;
+	padding:0px;
+	margin:0px;
+	background-color:lightblue;
+}
+
+
+/* #containerDivId {
+	display:inline-block;
+	margin:0px;
+	padding:0px;
+	width:500px;
+	height:500px;
+	background-color:lightcoral;
+} */
+
+</style>
+
+<script type="application/javascript" src="jquery-3.1.1.min.js"></script>
+<script type="application/javascript" src="libs/fnc2d.js"></script>
+<script type="application/javascript" src="libs/utility.js"></script>
+
+<script type="application/javascript" src="fncColorPicker.js"></script>
+
+<script>
+
+var color_picker = null;
+
+function onBodyLoad()
+{
+	console.log("loaded");
+
+	color_picker = fncColorPicker.Create({hue:70, size:300, rot_offset:-Math.PI * 0.5, container_div_id:"testPickId"});
+
+	$("body").append(color_picker.$container_div);
+};
+
+</script>
+
+
+</head>
+
+<body id="bodyId" onload="onBodyLoad()">
+<h1>canvas color wheel test</h1>
+</body>
+</html>

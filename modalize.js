@@ -20,14 +20,15 @@ else
 var modalize = 
 {
 	// -------------------------------------------------------------------------
-	modal:function($parent, $modal_content, modal_id)
+	Create:function($parent, $modal_content, modal_id)
 	{
 		this.modal_id_suffix = "_modal_id";
 
 		this.body_cover_css = 
 		{
-			"opacity":0.5,
-			"background-color":"rgb(100,0,0)",
+			"display":"none",
+			// can't use opacity for these or child elements get opacified too
+			// "background-color":"rgba(100,0,0,0.5)",
 			"z-index":"1000",
 			"position":"absolute",
 			"left":"0px",
@@ -39,8 +40,14 @@ var modalize =
 		// -----------------------------------------------------------
 		this.dismiss = function()
 		{
-			$(`#${this.body_cover_id}`).remove();
-		},
+			// console.log("modalize:dismiss()");
+			this.$body_cover.css({"display":"none"});
+		};
+
+		this.start = function()
+		{
+			this.$body_cover.css({"display":"initial"});
+		};
 
 		this.$parent = $parent;
 		this.$modal_content = $modal_content;
@@ -49,10 +56,14 @@ var modalize =
 
 		this.$body_cover = $(`<div id="${this.body_cover_id}"></div>`);
 		this.$body_cover.css( this.body_cover_css );
+		this.$body_cover.click( function(event) {
+			this.dismiss();
+		}.bind(this) );
 
 		this.$parent.append(this.$body_cover);
-
 		this.$body_cover.append(this.$modal_content);
+
+		return this;
 	},
 
 };

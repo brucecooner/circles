@@ -110,15 +110,20 @@ body {
 	top:0px;
 }
 
+#colorPickId {
+	background-color:black;
+}
 </style>
 
 <script type="application/javascript" src="jquery-3.1.1.min.js"></script>
-<script src="libs/fnc2d.js"></script>
-<script src="libs/my2d.js"></script>
-<script src="libs/myRangeInput.js"></script>
-<script src="libs/WatchedValue.js"></script>
-<script src="modalize.js"></script>
-<script src="svgee.js"></script>
+<script type="application/javascript" src="libs/utility.js"></script>
+<script type="application/javascript" src="libs/fnc2d.js"></script>
+<script type="application/javascript" src="libs/my2d.js"></script>
+<script type="application/javascript" src="libs/myRangeInput.js"></script>
+<script type="application/javascript" src="libs/WatchedValue.js"></script>
+<script type="application/javascript" src="modalize.js"></script>
+<script type="application/javascript" src="svgee.js"></script>
+<script type="application/javascript" src="fncColorPicker.js"></script>
 
 <script type="application/javascript" src="layers.js"></script>
 <script type="application/javascript" src="save_dialog.js"></script>
@@ -160,6 +165,10 @@ var Layers = new LayersNS.Layers();
 
 var highlighted_layer = "";
 
+// var current_color = { hue:0, saturation:100, lightness:50 };
+var color_picker = null;
+var color_picker_dialog = null;
+
 var number_of_spokes = WatchedValue.Create(default_number_of_spokes,
 		[function(value) {	console.log("num spokes = " + value);
 									getCurrentLayer().config.number_of_spokes = value;
@@ -190,6 +199,10 @@ var spoke_rot_offset = WatchedValue.Create(default_spoke_rot_offset,
 									render();
 									}]);
 
+var current_color = WatchedValue.Create(	{hue:0, saturation:100, lightness:50},
+		[function(value) {	console.log("current_color = " + JSON.stringify(value));
+									$("#colorPickButtonId").css({"background-color":getColorString(value)});
+									}]);
 // --------------------------------------------------------
 function syncRangeInputs(circle_layer_config)
 {
@@ -229,14 +242,7 @@ function getNextName()
 // --------------------------------------------------------------------
 function getNextStroke()
 {
-	// var stroke = `"rgb(next_stroke.r, next_stroke.g, next_stroke.b)"`;
-
-	var red = Math.random() * 255;
-	var green = Math.random() * 255;
-	var blue = Math.random() * 255;
-
-	// var stroke = "rgb(200,0,0)";
-	var stroke = `rgb(${red},${green},${blue})`;
+	var stroke = getColorString(current_color.get());
 
 	return stroke;
 }
@@ -266,6 +272,20 @@ function addLayer()
 	$("#layerListId #addLayerButtonId").before($list_item);
 
 	return next_name;
+}
+
+// --------------------------------------------------------------------
+// returns: string "hsl(n,n,n)"
+function getColorString(color)
+{
+	return `hsl(${color.hue},${color.saturation}%,${color.lightness}%)`;
+}
+
+// --------------------------------------------------------------------
+// receives: hsl:{hue:number, saturation:number, lightness:number}
+function setCurrentColor(hsl)
+{
+	Object.assign(current_color, hsl);
 }
 
 // --------------------------------------------------------------------
@@ -363,7 +383,16 @@ $(document).ready( function()
 		  wheelStep:1,
         min:1, max:20, step:1})
 
-    stroke_width.addSetCallback(strokeWidthRangeCallback);
+	 stroke_width.addSetCallback(strokeWidthRangeCallback);
+	 
+	 color_picker = new fncColorPicker.Create({color_picked_handler:onColorPicked, size:250, container_div_id:"colorpick", hue:current_color.hue, rot_offset:-Math.PI * 0.5});
+
+	 color_picker_dialog = new modalize.Create($("body"), color_picker.$container_div, "colorpick_cover");
+
+	 var color_string = getColorString(current_color);
+
+	 // color the picker button with current color
+	 $("#colorPickButtonId").css("background-color", getColorString(current_color.get()));
 
     render();
 });
@@ -509,6 +538,22 @@ function onAddLayer()
 	console.log(render_order);
 }
 
+// ----------------------------------------------------------------------------
+function onPickColor()
+{
+	//asdf
+
+	color_picker_dialog.start();
+}
+
+// ----------------------------------------------------------------------------
+function onColorPicked(color)
+{
+	color_picker_dialog.dismiss();
+
+	current_color.set(color);
+}
+
 </script>
 
 </head>
@@ -530,6 +575,7 @@ function onAddLayer()
 		<tr><td>stroke</td><td id="strokeWidthRangeContainer"></td></tr>
 	</table>
 	 <button onclick="onSave()">save</button>
+	 <button id="colorPickButtonId" onclick="onPickColor()">xxx</button>
 </div>
 
 
