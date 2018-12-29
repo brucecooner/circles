@@ -6,16 +6,30 @@
 <!--
 TODO:
 SOON...
+* separate data func. from interface
+* ID EVERYTHING!
 * save business
 	- cancellation
-* styles to dedicated file
+* styles to dedicated css
 * color picker?
+	- better placement, feedback?
 * remove layer
 * configurable layer names
 	-will users care about layer names?
 * way to highlight layer?
 * clone layer?
-* layer visibility
+* layer visibility?
+* dismissable editor
+* the stroke/color thing is getting confusing, sort out
+
+LAYER UI STUFF
+* expandable layer menu?
+* currently editing layer
+* layer visibility (control alpha probably)
+
+MODAL NEEDS
+* placement
+* dismissal callback?
 
 LESS SOON...
 * multiple stages
@@ -39,7 +53,8 @@ WAY LATER...
 body {
     width:100%;
     height:100%;
-    margin: 0px 0px 0px 0px;
+	 margin: 0px 0px 0px 0px;
+	 position: relative;
     /* background-color:blue; */
 }
 
@@ -56,7 +71,7 @@ body {
 	padding: 2px;
 }
 
-.layerListClass {
+.layerListContainer {
 	position:fixed;
 	float:left;
 	left:0px;
@@ -70,7 +85,7 @@ body {
 	min-width:10%;
 }
 
-.layerListClass ul {
+.layerListContainer ul {
 	margin:2px;
 	padding:15px;
 }
@@ -113,6 +128,7 @@ body {
 #colorPickId {
 	background-color:black;
 }
+
 </style>
 
 <script type="application/javascript" src="jquery-3.1.1.min.js"></script>
@@ -121,13 +137,19 @@ body {
 <script type="application/javascript" src="libs/my2d.js"></script>
 <script type="application/javascript" src="libs/myRangeInput.js"></script>
 <script type="application/javascript" src="libs/WatchedValue.js"></script>
-<script type="application/javascript" src="modalize.js"></script>
+<script type="application/javascript" src="libs/modalize.js"></script>
+<script type="application/javascript" src="libs/popupper.js"></script>
 <script type="application/javascript" src="svgee.js"></script>
 <script type="application/javascript" src="fncColorPicker.js"></script>
 
+<!-- DATA -->
 <script type="application/javascript" src="layers.js"></script>
+
+ <!-- UI -->
 <script type="application/javascript" src="save_dialog.js"></script>
 
+<link rel="stylesheet" type="text/css" href="ui/edit_layer_popup.css">
+<script type="application/javascript" src="ui/edit_layer_popup.js"></script>
 
 <script type="application/javascript">
 
@@ -159,15 +181,19 @@ var default_circle_layer_config =
 	spoke_rot_offset: default_spoke_rot_offset,
 };
 
+// ---- LAYERS ----
 var render_order = [];
 
 var Layers = new LayersNS.Layers();
 
 var highlighted_layer = "";
 
+// ---- COLOR ----
 // var current_color = { hue:0, saturation:100, lightness:50 };
 var color_picker = null;
 var color_picker_dialog = null;
+
+
 
 var number_of_spokes = WatchedValue.Create(default_number_of_spokes,
 		[function(value) {	console.log("num spokes = " + value);
@@ -248,6 +274,34 @@ function getNextStroke()
 }
 
 // --------------------------------------------------------------------
+function generateLayerListItem(layer_name,background_color)
+{
+	var $layer_list_item = $(`<li class="layerList_Item" data-layer-name="${layer_name}">${layer_name}</li>`);
+
+	$layer_list_item.css({"background-color":background_color });
+	// handlers
+	$layer_list_item.click( (event) => { console.log("clicked layer list item"); setCurrentLayer(layer_name); } );
+	$layer_list_item.mouseover( (evt) =>
+	{ 
+		$list_item = $(evt.currentTarget);
+
+		highlightLayer(layer_name);
+
+		var popup_menu_position = $list_item.position();
+		popup_menu_position.left += $list_item.width();
+
+		// TODO: place modal 
+		$edit_layer_popup_menu.set_position(popup_menu_position);
+		$edit_layer_popup_menu.start();
+	} );
+	$layer_list_item.mouseout( (evt) => {
+		highlightLayer("");
+	} );
+
+	return $layer_list_item;
+}
+
+// --------------------------------------------------------------------
 function addLayer()
 {
 	var new_config = default_circle_layer_config;
@@ -258,18 +312,9 @@ function addLayer()
 	Layers.addCircleLayer( next_name, new_config );
 	render_order.push(next_name);
 
-	var $list_item = $(`<li data-layer="${next_name}">${next_name}</li>`);
-	$list_item.css({"background-color":new_config.stroke });
-	$list_item.click( () => setCurrentLayer($list_item.attr("data-layer")) );
-	$list_item.mouseover( (evt) =>
-	{ 
-		highlightLayer(next_name); 
-	} );
-	$list_item.mouseout( (evt) => {
-		highlightLayer("");
-	} );
+	var $list_item = generateLayerListItem(next_name, new_config.stroke);
 	
-	$("#layerListId #addLayerButtonId").before($list_item);
+	$("#layerListId #addLayerButtonId").after($list_item);
 
 	return next_name;
 }
@@ -285,7 +330,8 @@ function getColorString(color)
 // receives: hsl:{hue:number, saturation:number, lightness:number}
 function setCurrentColor(hsl)
 {
-	Object.assign(current_color, hsl);
+	// todo: fill out hsl? 
+	current_color.set(hsl);
 }
 
 // --------------------------------------------------------------------
@@ -330,6 +376,10 @@ function highlightLayer(layer_name)
 $(document).ready( function()
 {
 	// ---- DATA INIT ----
+	addLayer();
+	setCurrentColor( {hue:75, saturation:100, lightness:50} );
+	addLayer();
+	setCurrentColor( {hue:135, saturation:100, lightness:50} );
 	var new_layer_name = addLayer();
 
 	Layers.setCurrentLayer(new_layer_name);
@@ -385,14 +435,19 @@ $(document).ready( function()
 
 	 stroke_width.addSetCallback(strokeWidthRangeCallback);
 	 
-	 color_picker = new fncColorPicker.Create({color_picked_handler:onColorPicked, size:250, container_div_id:"colorpick", hue:current_color.hue, rot_offset:-Math.PI * 0.5});
-
-	 color_picker_dialog = new modalize.Create($("body"), color_picker.$container_div, "colorpick_cover");
-
-	 var color_string = getColorString(current_color);
+	// --- UI INIT ---
+	$edit_layer_popup_menu = generateEditLayerPopupMenu("#layerListContainerId");
+	color_picker = new fncColorPicker.Create({color_picked_handler:onColorPicked, size:250, container_div_id:"colorpick", hue:current_color.hue, rot_offset:-Math.PI * 0.5});
+	color_picker_dialog = new modalize.Create($("body"), color_picker.$container_div, "colorpick_cover", {left:50,top:20});
 
 	 // color the picker button with current color
+	 // TODO: make function
 	 $("#colorPickButtonId").css("background-color", getColorString(current_color.get()));
+	 
+	$("#layerListContainerId").mouseleave( () => {
+		// console.log("leaving listcontainer id");
+		$edit_layer_popup_menu.dismiss();
+	});
 
     render();
 });
@@ -561,7 +616,7 @@ function onColorPicked(color)
 <!-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  -->
 <body onload="onBodyLoad()">
 
-<div class="layerListClass">
+<div id="layerListContainerId" class="layerListContainer">
 	<ul id="layerListId">		
 		<button id="addLayerButtonId" onclick="onAddLayer()">+</button>
 	</ul>

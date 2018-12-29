@@ -1,0 +1,18 @@
+
+/* popup menu off by default */
+#editLayerPopupMenuId {
+	display:none;
+	border:1px solid black;
+	background-color:rgba(200,200,200,1);
+}
+
+.editLayerPopupMenuItem:hover {
+	background-color:rgba(150,150,150,1);
+}
+
+/* .editLayerPopupMenu {
+} */
+
+/* .editLayerPopupMenuItem {
+
+} */
