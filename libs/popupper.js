@@ -5,6 +5,7 @@ TODO:
 	-need to specify item user can remain over without removing popup
 	-remove when:
 			-user leaves original element, but doesn't enter popup
+	-optional dismissal on item click
 */
 
 // must have jquery
@@ -21,13 +22,14 @@ var popupper =
 	// Creates popuppable form of content
 	// OPTIONAL:
 	// position:{left:number, top:number}
+	// dismiss_on_item_click:boolean
 	// RETURNS: $body_covering_object
 	// ASSUMPTIONS:
 	//	* modal_id will be unique
 	// SIDE EFFECTS:
 	//	* $menu_content parameter's css position set to absolute
 	//	* $menu_content parameter's css left/top altered
-	Create:function($parent, $menu_content, position)
+	Create:function($parent, $menu_content, position )
 	{
 		// --- VALIDATION ---
 
@@ -40,7 +42,7 @@ var popupper =
 		// -----------------------------------------------------------
 		this.dismiss = function()
 		{
-			console.log("popupper:dismiss()");
+			console.log("popupper:dismiss() parent id: " + this.$parent.attr("id"));
 			// this.$body_cover.css({"display":"none"});
 			this.$menu_content.css({"display":"none"});
 
@@ -51,8 +53,7 @@ var popupper =
 		// -------------------------------------------------------------------------
 		this.start = function()
 		{
-			console.log("popupper:start()");
-			// this.$body_cover.css({"display":"initial"});
+			console.log("popupper:start() parent id:" + this.$parent.attr("id"));
 			this.$menu_content.css({"display":"initial"});
 		};
 
@@ -82,22 +83,15 @@ var popupper =
 		// want to know when mouse has entered popup
 		this.entered_popup = false;
 		this.$menu_content.mouseenter( (event) => {
-			console.log("popupper : entered menu");
+			console.log(`popupper parent(${$parent.attr("id")}): entered menu`);
 			this.entered_popup = true;
 		});
-		this.$menu_content.mouseleave( (event) => {
-			console.log("popupper : left menu");
-			this.dismiss();
-		});
-
-		// this.$body_cover = $(`<div id="${this.body_cover_id}"></div>`);
-		// this.$body_cover.css( this.body_cover_css );
-		// this.$body_cover.click( function(event) {
+		// this.$menu_content.mouseleave( (event) => {
+		// 	console.log("popupper : left menu");
 		// 	this.dismiss();
-		// }.bind(this) );
+		// });
 
 		this.$parent.append(this.$menu_content);
-		// this.$body_cover.append(this.$menu_content);
 
 		return this;
 	},

@@ -6,6 +6,7 @@
 <!--
 TODO:
 SOON...
+* get jquery 3.3.1
 * separate data func. from interface
 * ID EVERYTHING!
 * save business
@@ -276,27 +277,45 @@ function getNextStroke()
 // --------------------------------------------------------------------
 function generateLayerListItem(layer_name,background_color)
 {
-	var $layer_list_item = $(`<li class="layerList_Item" data-layer-name="${layer_name}">${layer_name}</li>`);
+	var $layer_list_item = $(`<li id="layerList_Item_${layer_name}Id" class="layerList_Item" data-layer-name="${layer_name}">${layer_name}</li>`);
 
 	$layer_list_item.css({"background-color":background_color });
 	// handlers
-	$layer_list_item.click( (event) => { console.log("clicked layer list item"); setCurrentLayer(layer_name); } );
-	$layer_list_item.mouseover( (evt) =>
-	{ 
-		$list_item = $(evt.currentTarget);
 
-		highlightLayer(layer_name);
+	popupMenuActionHandleCallback = function(...args)
+	{
+		$layer_list_item.$popup_menu.dismiss();
+		onEditLayerPopupMenuAction(...args);
+	}
 
-		var popup_menu_position = $list_item.position();
-		popup_menu_position.left += $list_item.width();
+	$layer_list_item.$popup_menu = generateEditLayerPopupMenu($layer_list_item, layer_name, popupMenuActionHandleCallback );
 
-		// TODO: place modal 
-		$edit_layer_popup_menu.set_position(popup_menu_position);
-		$edit_layer_popup_menu.start();
-	} );
-	$layer_list_item.mouseout( (evt) => {
+	// $layer_list_item.mouseenter( (evt) =>
+	// { 
+	// 	highlightLayer(layer_name);
+
+	// 	var popup_menu_position = $layer_list_item.position();
+	// 	popup_menu_position.left += $layer_list_item.width();
+	// 	$layer_list_item.$popup_menu.set_position(popup_menu_position);
+	// 	$layer_list_item.$popup_menu.start(popup_menu_position);
+	// } );
+
+	$layer_list_item.mouseleave( (evt) => {
 		highlightLayer("");
+		$layer_list_item.$popup_menu.dismiss();
 	} );
+
+	// TODO: send to more mature layer click handler
+	$layer_list_item.click( (event) => 
+	{ 
+		console.log("clicked layer list item"); 
+		setCurrentLayer(layer_name); 
+
+		var popup_menu_position = $layer_list_item.position();
+		popup_menu_position.left += $layer_list_item.width();
+		$layer_list_item.$popup_menu.set_position(popup_menu_position);
+		$layer_list_item.$popup_menu.start(popup_menu_position);
+	});
 
 	return $layer_list_item;
 }
@@ -371,6 +390,12 @@ function highlightLayer(layer_name)
 }
 
 // --------------------------------------------------------------------
+function onEditLayerPopupMenuAction(action_text, layer_name)
+{
+	console.log("onEditLayerPopupMenuAction: " + action_text + "->" + layer_name);
+}
+
+// --------------------------------------------------------------------
 // --------------------------------------------------------------------
 // --------------------------------------------------------------------
 $(document).ready( function()
@@ -436,7 +461,8 @@ $(document).ready( function()
 	 stroke_width.addSetCallback(strokeWidthRangeCallback);
 	 
 	// --- UI INIT ---
-	$edit_layer_popup_menu = generateEditLayerPopupMenu("#layerListContainerId");
+	// $edit_layer_popup_menu = generateEditLayerPopupMenu("#layerListContainerId", onEditLayerPopupMenuAction );
+
 	color_picker = new fncColorPicker.Create({color_picked_handler:onColorPicked, size:250, container_div_id:"colorpick", hue:current_color.hue, rot_offset:-Math.PI * 0.5});
 	color_picker_dialog = new modalize.Create($("body"), color_picker.$container_div, "colorpick_cover", {left:50,top:20});
 
@@ -444,10 +470,10 @@ $(document).ready( function()
 	 // TODO: make function
 	 $("#colorPickButtonId").css("background-color", getColorString(current_color.get()));
 	 
-	$("#layerListContainerId").mouseleave( () => {
-		// console.log("leaving listcontainer id");
-		$edit_layer_popup_menu.dismiss();
-	});
+	// $("#layerListContainerId").mouseleave( () => {
+	// 	// console.log("leaving listcontainer id");
+	// 	$edit_layer_popup_menu.dismiss();
+	// });
 
     render();
 });
@@ -581,7 +607,9 @@ function onSave()
 	}
 	svg_blob_url = show_svg();
 
+	// TODO: uhhh, fix modal again
 	save_modal = openSaveDialog(svg_blob_url);
+	save_modal.start();
 }
 
 // ----------------------------------------------------------------------------
