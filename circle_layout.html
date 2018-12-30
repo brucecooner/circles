@@ -6,8 +6,7 @@
 <!--
 TODO:
 SOON...
-* indicate current layer in layers menu!
-* color picked => current layer
+* update layer list when layer color changes
 * all around better color handling
 * better defaults mgmt/surfacing?
 * layer list stuff to own file
@@ -342,7 +341,7 @@ function generateLayerListItem(layer_name,background_color)
 // --------------------------------------------------------------------
 function addLayer()
 {
-	var new_layer = fractala.addCirclesLayer();
+	var new_layer = fractala.addCirclesLayer({stroke:getColorString(current_color.get())});
 
 	var $list_item = generateLayerListItem(new_layer.name, new_layer.stroke);
 	
@@ -353,7 +352,7 @@ function addLayer()
 }
 
 // --------------------------------------------------------------------
-// returns: string "hsl(n,n,n)"
+// returns: string "hsl(n,n%,n%)"
 function getColorString(color)
 {
 	return `hsl(${color.hue},${color.saturation}%,${color.lightness}%)`;
@@ -466,8 +465,8 @@ $(document).ready( function()
 	 // TODO: make function
 	 $("#colorPickButtonId").css("background-color", getColorString(current_color.get()));
 
-	// default...
-	var default_layer = addLayer(); //fractala.addCirclesLayer({stroke:"hsl(0,100%,50%)"});
+	// default the model
+	var default_layer = addLayer();
 	// current_layer_name = default_layer.name;
 	setCurrentLayer(default_layer.name);
 
@@ -581,6 +580,12 @@ function onColorPicked(color)
 	color_picker_dialog.dismiss();
 
 	current_color.set(color);
+
+	if (current_layer_name !== "")
+	{
+		getCurrentLayer().stroke=getColorString(current_color.get());
+		render();
+	}
 }
 
 </script>
