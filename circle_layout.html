@@ -6,12 +6,15 @@
 <!--
 TODO:
 SOON...
+* indicate current layer in layers menu!
+* color picked => current layer
+* all around better color handling
 * better defaults mgmt/surfacing?
 * layer list stuff to own file
 * split out layer types (eventually)
 * do proper accessors on stuff
 * get jquery 3.3.1
-* more log channeling
+* log channeling on watched values
 * separate data func. from interface
 * ID EVERYTHING! (working on it)
 * save business
@@ -135,6 +138,26 @@ body {
 	background-color:black;
 }
 
+/* asdf */
+.layerListItemName {
+	display:inline;
+}
+
+.layerListActiveLayerIndicator {
+	background-color:rgb(0,255,0);
+	border:1px solid black;
+	/* border-top-right-radius: 5px; */
+	/* border-bottom-right-radius: 5px; */
+}
+
+li.layerList_Item[data-active-layer=false] .layerListActiveLayerIndicator {
+	display:none;
+}
+
+li.layerList_Item[data-active-layer=true] .layerListActiveLayerIndicator {
+	display:inline;
+}
+
 </style>
 
 <script type="application/javascript" src="jquery-3.1.1.min.js"></script>
@@ -233,10 +256,12 @@ function syncRangeInputs()
 // ----------------------------------------------------------------------------
 function setCurrentLayer(layer_name)
 {
+	$(`.layerList_Item`).attr("data-active-layer", false);
+
 	current_layer_name = layer_name;
 	console.log("setting layer to " + layer_name);
 
-	// Layers.setCurrentLayer(layer_name);
+	$(`.layerList_Item[data-layer-name=${current_layer_name}]`).attr("data-active-layer", true);
 
 	syncRangeInputs();
 }
@@ -268,18 +293,31 @@ function getNextStroke()
 // --------------------------------------------------------------------
 function generateLayerListItem(layer_name,background_color)
 {
-	var $layer_list_item = $(`<li id="layerList_Item_${layer_name}Id" class="layerList_Item" data-layer-name="${layer_name}">${layer_name}</li>`);
+	var $layer_list_item = $(`<li class="layerList_Item" ></li>`);
+	$layer_list_item.attr("data-layer-name", layer_name);
+	$layer_list_item.attr("id", `layerList_Item_${layer_name}_Id`);
+	$layer_list_item.attr("data-active-layer", false);
 
-	$layer_list_item.css({"background-color":background_color });
+	$name = $(`<div class="layerListItemName" id="layerListItemName_${layer_name}_Id">${layer_name}</div>`);
+	$name.css({"background-color":background_color });
+	var $active_indicator = $(`<div class="layerListActiveLayerIndicator">_</div>`);
+	$active_indicator.attr("id", `layerListItemActiveIndicator_${layer_name}_Id` );
+
+	$layer_list_item.append($name);
+	$layer_list_item.append($active_indicator);
+
+	// $layer_list_item.css({"background-color":background_color });
+
 	// handlers
-
 	popupMenuActionHandleCallback = function(...args)
 	{
 		$layer_list_item.$popup_menu.dismiss();
 		onEditLayerPopupMenuAction(...args);
 	}
 
-	$layer_list_item.$popup_menu = generateEditLayerPopupMenu($layer_list_item, layer_name, popupMenuActionHandleCallback );
+	$layer_list_item.$popup_menu = generateEditLayerPopupMenu($layer_list_item, 
+																	layer_name, 
+																	popupMenuActionHandleCallback );
 
 	$layer_list_item.mouseleave( (evt) => {
 		highlightLayer("");
@@ -534,8 +572,6 @@ function onAddLayer()
 // ----------------------------------------------------------------------------
 function onPickColor()
 {
-	//asdf
-
 	color_picker_dialog.start();
 }
 
