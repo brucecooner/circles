@@ -75,9 +75,9 @@ FractalaSVGRenderer.FractalaSVGRenderer.prototype.render = function()
 	var svg_elem = `<svg width="100%" height="100%" id="mySVG" viewbox="${x} ${y} ${width} ${height}">`;
 
 	// loop over its layers or, something
-	fractala.layers.forEach( (current_layer) => {
+	this.fractala.layers_order.forEach( (current_layer_name) => {
 
-		var current_element = this.renderLayer(current_layer);
+		var current_element = this.renderLayer(this.fractala.getLayer(current_layer_name));
 		this.layer_elements.push(current_element);
 
 		svg_elem += current_element;

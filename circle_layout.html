@@ -6,6 +6,8 @@
 <!--
 TODO:
 SOON...
+* better defaults mgmt/surfacing?
+* layer list stuff to own file
 * split out layer types (eventually)
 * do proper accessors on stuff
 * get jquery 3.3.1
@@ -169,37 +171,10 @@ LogChannels.EnableChannel(popupper_channel_name, false);
 var fractala = null;
 var fractala_svg_renderer = null;
 
+var current_layer_name = "";
+
 var view_width;
 var view_height;
-
-var x_translate = 0;
-var y_translate = 0;
-
-const default_number_of_spokes = 6;
-const default_spoke_length = 100;
-const default_spoke_rot_offset = 0;
-const default_circle_radius = 50;
-const default_stroke_width = 5;
-const default_stroke = "rgb(255,0,0)";
-
-var next_stroke = {r:100, g:0, b:0};
-var stroke_step = {r:5, g:5, b:5 };
-var next_name_index = 1;
-
-var default_circle_layer_config = 
-{
-	stroke: default_stroke,
-	radius: default_circle_radius,
-	number_of_spokes: default_number_of_spokes,
-	stroke_width: default_stroke_width,
-	spoke_length: default_spoke_length,
-	spoke_rot_offset: default_spoke_rot_offset,
-};
-
-// ---- LAYERS ----
-var render_order = [];
-
-var Layers = new LayersNS.Layers();
 
 var highlighted_layer = "";
 
@@ -209,34 +184,33 @@ var color_picker = null;
 var color_picker_dialog = null;
 
 
-
-var number_of_spokes = WatchedValue.Create(default_number_of_spokes,
+var number_of_spokes = WatchedValue.Create(0, //default_number_of_spokes,
 		[function(value) {	console.log("num spokes = " + value);
-									getCurrentLayer().config.number_of_spokes = value;
+									getCurrentLayer().number_of_spokes = value;
 									render();
 								}]);
 
-var spoke_length = WatchedValue.Create(default_spoke_length,
+var spoke_length = WatchedValue.Create(0, //default_spoke_length,
 		[function(value) {   console.log("spoke length = " + value);
-									getCurrentLayer().config.spoke_length = value;
+									getCurrentLayer().spoke_length = value;
 									render();
 								}]);
 
-var circle_radius = WatchedValue.Create(default_circle_radius,
+var circle_radius = WatchedValue.Create(0,//default_circle_radius,
 		[function(value) {   console.log("radius = " + value);
-									getCurrentLayer().config.radius = value;
+									getCurrentLayer().radius = value;
 									render();
 								}]);
 
-var stroke_width = WatchedValue.Create(default_stroke_width,
+var stroke_width = WatchedValue.Create(0,//default_stroke_width,
 		[function(value) {	console.log("stroke width = " + value);
-									getCurrentLayer().config.stroke_width = value;
+									getCurrentLayer().stroke_width = value;
 									render();
 									}]);
 
-var spoke_rot_offset = WatchedValue.Create(default_spoke_rot_offset,
+var spoke_rot_offset = WatchedValue.Create(0,//default_spoke_rot_offset,
 		[function(value) {	console.log("spoke rot offset = " + value);
-									getCurrentLayer().config.spoke_rot_offset = value;
+									getCurrentLayer().spoke_rot_offset = value;
 									render();
 									}]);
 
@@ -245,29 +219,32 @@ var current_color = WatchedValue.Create(	{hue:0, saturation:100, lightness:50},
 									$("#colorPickButtonId").css({"background-color":getColorString(value)});
 									}]);
 // --------------------------------------------------------
-function syncRangeInputs(circle_layer_config)
+function syncRangeInputs()
 {
-	$("#numSpokesId")[0].value = circle_layer_config.number_of_spokes;
-	$("#spokeLengthId")[0].value = circle_layer_config.spoke_length;
-	$("#spokeRotOffsetId")[0].value = circle_layer_config.spoke_rot_offset;
-	$("#circleRadiusId")[0].value = circle_layer_config.radius;
-	$("#strokeWidthId")[0].value = circle_layer_config.stroke_width;
+	var current_layer = getCurrentLayer();
+
+	$("#numSpokesId")[0].value = current_layer.number_of_spokes;
+	$("#spokeLengthId")[0].value = current_layer.spoke_length;
+	$("#spokeRotOffsetId")[0].value = current_layer.spoke_rot_offset;
+	$("#circleRadiusId")[0].value = current_layer.radius;
+	$("#strokeWidthId")[0].value = current_layer.stroke_width;
 };
 
 // ----------------------------------------------------------------------------
 function setCurrentLayer(layer_name)
 {
+	current_layer_name = layer_name;
 	console.log("setting layer to " + layer_name);
 
-	Layers.setCurrentLayer(layer_name);
+	// Layers.setCurrentLayer(layer_name);
 
-	syncRangeInputs(Layers.getCurrentLayer().config);
+	syncRangeInputs();
 }
 
 // ----------------------------------------------------------------------------
 function getCurrentLayer()
 {
-	return Layers.getCurrentLayer();
+	return fractala.getLayer(current_layer_name);
 }
 
 // --------------------------------------------------------------------
@@ -304,16 +281,6 @@ function generateLayerListItem(layer_name,background_color)
 
 	$layer_list_item.$popup_menu = generateEditLayerPopupMenu($layer_list_item, layer_name, popupMenuActionHandleCallback );
 
-	// $layer_list_item.mouseenter( (evt) =>
-	// { 
-	// 	highlightLayer(layer_name);
-
-	// 	var popup_menu_position = $layer_list_item.position();
-	// 	popup_menu_position.left += $layer_list_item.width();
-	// 	$layer_list_item.$popup_menu.set_position(popup_menu_position);
-	// 	$layer_list_item.$popup_menu.start(popup_menu_position);
-	// } );
-
 	$layer_list_item.mouseleave( (evt) => {
 		highlightLayer("");
 		$layer_list_item.$popup_menu.dismiss();
@@ -337,19 +304,14 @@ function generateLayerListItem(layer_name,background_color)
 // --------------------------------------------------------------------
 function addLayer()
 {
-	var new_config = default_circle_layer_config;
+	var new_layer = fractala.addCirclesLayer();
+
+	var $list_item = generateLayerListItem(new_layer.name, new_layer.stroke);
 	
-	new_config.stroke = getNextStroke();
-	var next_name = getNextName();
+	$("#layerListId").prepend($list_item);
 
-	Layers.addCircleLayer( next_name, new_config );
-	render_order.push(next_name);
-
-	var $list_item = generateLayerListItem(next_name, new_config.stroke);
-	
-	$("#layerListId #addLayerButtonId").after($list_item);
-
-	return next_name;
+	// return next_name;
+	return new_layer;
 }
 
 // --------------------------------------------------------------------
@@ -380,11 +342,6 @@ function highlightLayer(layer_name)
 	}
 	else
 	{
-		// $("#mySVG g").each( (index) =>
-		// {
-		// 	console.log(index);
-		// 	console.log(`processing layer: ${$(this).attr("data-layer-name")}`);
-		// });
 		$("#mySVG g").each( function(index) 
 		{ 
 			var cur_layer = $(this).attr("data-layer-name")
@@ -394,12 +351,6 @@ function highlightLayer(layer_name)
 
 			$(this).attr("opacity", cur_opacity);
 		});
-		// render_order.forEach( (current_name) =>
-		// {
-		// 	var cur_opacity = (current_name == highlighted_layer) ? 1.0 : 0.5;
-
-		// 	$(`#mySVG g[data-layer-name=${current_name}]`).attr("opacity", `"${cur_opacity}"`);
-		// });
 	}
 }
 
@@ -418,24 +369,16 @@ $(document).ready( function()
 	fractala = new Fractala.Fractala();
 	fractala_svg_renderer = new FractalaSVGRenderer.FractalaSVGRenderer(fractala, {width:view_width, height:view_width});
 
-// testing
-fractala.addCirclesLayer();
-fractala.addCirclesLayer();
-
-	addLayer();
-	setCurrentColor( {hue:75, saturation:100, lightness:50} );
-	addLayer();
-	setCurrentColor( {hue:135, saturation:100, lightness:50} );
-	var new_layer_name = addLayer();
-
-	Layers.setCurrentLayer(new_layer_name);
+	// default...
+	var default_layer = addLayer(); //fractala.addCirclesLayer({stroke:"hsl(0,100%,50%)"});
+	current_layer_name = default_layer.name;
 
     // --- DUCTWORK ---
     // num circles
     let numSpokesRangeCallback = myRangeInput.createRange({id:'numSpokesId',
         containerId:'numSpokesRangeContainer',
         onInputHandler:number_of_spokes.set,
-		  initialValue:default_number_of_spokes,
+		  initialValue:0, //default_number_of_spokes,
 		  wheelStep:1,
         min:1, max:100, step:1})
 
@@ -445,7 +388,7 @@ fractala.addCirclesLayer();
     let spokeLengthRangeCallback = myRangeInput.createRange({id:'spokeLengthId',
         containerId:'spokeLengthRangeContainer',
         onInputHandler:spoke_length.set,
-		  initialValue:default_spoke_length,
+		  initialValue:0, //default_spoke_length,
 		  wheelStep:1,
         min:0, max:500, step:1})
 
@@ -455,7 +398,7 @@ fractala.addCirclesLayer();
     let spokeRotOffsetRangeCallback = myRangeInput.createRange({id:'spokeRotOffsetId',
         containerId:'spokeRotOffsetRangeContainer', 
         onInputHandler:spoke_rot_offset.set,
-        initialValue:default_spoke_rot_offset,
+        initialValue:0, //default_spoke_rot_offset,
 		  wheelStep:my2d.TWO_PI / 360,
         min:0, max:my2d.TWO_PI, step:0.01})
 
@@ -465,7 +408,7 @@ fractala.addCirclesLayer();
     let circleRadiusRangeCallback = myRangeInput.createRange({id:'circleRadiusId',
         containerId:'circleRadiusRangeContainer',
         onInputHandler:circle_radius.set,
-        initialValue:default_circle_radius,
+        initialValue:0, //default_circle_radius,
 		  wheelStep:1,
         min:5, max:500, step:1})
 
@@ -475,28 +418,23 @@ fractala.addCirclesLayer();
     let strokeWidthRangeCallback = myRangeInput.createRange({id:'strokeWidthId',
         containerId:'strokeWidthRangeContainer',
         onInputHandler:stroke_width.set,
-        initialValue:default_stroke_width,
+        initialValue:0, //default_stroke_width,
 		  wheelStep:1,
         min:1, max:20, step:1})
 
 	 stroke_width.addSetCallback(strokeWidthRangeCallback);
 	 
 	// --- UI INIT ---
-	// $edit_layer_popup_menu = generateEditLayerPopupMenu("#layerListContainerId", onEditLayerPopupMenuAction );
-
 	color_picker = new fncColorPicker.Create({color_picked_handler:onColorPicked, size:250, container_div_id:"colorpick", hue:current_color.hue, rot_offset:-Math.PI * 0.5});
 	color_picker_dialog = new modalize.Create($("body"), color_picker.$container_div, "colorpick_cover", {left:50,top:20});
 
 	 // color the picker button with current color
 	 // TODO: make function
 	 $("#colorPickButtonId").css("background-color", getColorString(current_color.get()));
-	 
-	// $("#layerListContainerId").mouseleave( () => {
-	// 	// console.log("leaving listcontainer id");
-	// 	$edit_layer_popup_menu.dismiss();
-	// });
 
-    render();
+	syncRangeInputs();
+
+	render();
 });
 
 // --------------------------------------------------------------------
@@ -506,6 +444,7 @@ function onBodyLoad()
     view_height = window.innerHeight;
 };
 
+/*
 // --------------------------------------------------------------------
 function onWheel()
 {
@@ -535,6 +474,7 @@ function zoomOut()
 
     logStats();
 }
+*/
 
 // --------------------------------------------------------------------
 function show_svg() {
@@ -544,63 +484,10 @@ function show_svg() {
                             {'type': "image/svg+xml"});
     var object_url = URL.createObjectURL(svg_blob);
 
-	// $("#menuBarId").append( $(`<a href=${url} download="test_svg.svg">linky</a>`));
-
     // later... revokeObjectURL();
 	 // var svg_win = window.open(url, "svg_win");
 	 return object_url;
 }
-
-// --------------------------------------------------------------------
-function generate_layer(circle_layer)
-{
-	var current_config = circle_layer.config;
-
-	const degrees_per_radian = 360.0 / my2d.TWO_PI;
-	var rotate_degrees = current_config.spoke_rot_offset * degrees_per_radian;
-	var transform_attribute = `transform="rotate(${rotate_degrees})"`;
-
-	var svg_elem = `<g data-layer-name="${circle_layer.name}" ${transform_attribute}>`;
-
-	var current_center = new fnc2d.Point(0, -current_config.spoke_length);
-
-	var rotation = my2d.TWO_PI / current_config.number_of_spokes;
-
-	for (var current_spoke = 0; current_spoke < current_config.number_of_spokes; current_spoke += 1)
-	{
-		var current_circle = svgee.circle(	current_center.x, current_center.y, 
-															current_config.radius,
-															{ stroke_width:current_config.stroke_width, stroke:current_config.stroke });
-
-		svg_elem += current_circle;
-
-		current_center = current_center.rotate(rotation);
-	}
-
-	svg_elem += "</g>";
-	
-	return svg_elem;
-}
-
-// --------------------------------------------------------------------
-function generate_svg()
-{
-    var width = view_width;
-    var height = view_height;
-    var x = -view_width / 2;
-    var y = -view_height / 2;
-
-	 var svg_elem = `<svg width="100%" height="100%" id="mySVG" viewbox="${x} ${y} ${width} ${height}">`;
-
-	render_order.forEach( (current_name) =>
-	{
-		svg_elem += generate_layer(Layers.getLayer(current_name));
-	});
-
-	svg_elem += "</svg>";
-
-	return svg_elem;
-};
 
 // --------------------------------------------------------------------
 function render()
@@ -612,6 +499,7 @@ function render()
 
     $("body").append(svg_elem);
 }
+
 
 // TODO: move upward
 var save_modal = null;
@@ -667,8 +555,8 @@ function onColorPicked(color)
 <body onload="onBodyLoad()">
 
 <div id="layerListContainerId" class="layerListContainer">
-	<ul id="layerListId">		
-		<button id="addLayerButtonId" onclick="onAddLayer()">+</button>
+	<button id="addLayerButtonId" onclick="onAddLayer()">+</button>
+	<ul id="layerListId">
 	</ul>
 </div>
 <div class="menuBarClass" id="menuBarId">
