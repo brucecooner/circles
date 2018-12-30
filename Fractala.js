@@ -7,9 +7,9 @@ var Fractala = {
 		number_of_spokes:6, 
 		spoke_length:50,
 		spoke_rot_offset:0,
-		// radius:"number",
+		radius:20,	// circles specific
 		stroke_width:1,
-		stroke:"hsl(0,100,0)",
+		stroke:"hsl(0,100%,0%)",
 	},
 
 	// --- DATA ---
@@ -24,7 +24,7 @@ var Fractala = {
 	Layer:function(parameters)
 	{
 		this.layer_index = Fractala.getNextLayerIndex();
-		
+
 		this.name = `layer_${this.layer_index}`;
 
 		Object.assign(this, Fractala.layer_default_parameters);

@@ -6,6 +6,8 @@
 <!--
 TODO:
 SOON...
+* split out layer types (eventually)
+* do proper accessors on stuff
 * get jquery 3.3.1
 * more log channeling
 * separate data func. from interface
@@ -146,6 +148,7 @@ body {
 <script type="application/javascript" src="fncColorPicker.js"></script>
 
 <script type="application/javascript" src="Fractala.js"></script>
+<script type="application/javascript" src="FractalaSVGRenderer.js"></script>
 
 <!-- DATA -->
 <script type="application/javascript" src="layers.js"></script>
@@ -163,6 +166,9 @@ LogChannels.CaptureConsoleLog();
 LogChannels.EnableChannel(popupper_channel_name, false);
 
 // ----- GLOBALS -----
+var fractala = null;
+var fractala_svg_renderer = null;
+
 var view_width;
 var view_height;
 
@@ -409,6 +415,13 @@ function onEditLayerPopupMenuAction(action_text, layer_name)
 $(document).ready( function()
 {
 	// ---- DATA INIT ----
+	fractala = new Fractala.Fractala();
+	fractala_svg_renderer = new FractalaSVGRenderer.FractalaSVGRenderer(fractala, {width:view_width, height:view_width});
+
+// testing
+fractala.addCirclesLayer();
+fractala.addCirclesLayer();
+
 	addLayer();
 	setCurrentColor( {hue:75, saturation:100, lightness:50} );
 	addLayer();
@@ -594,7 +607,8 @@ function render()
 {
     $("#mySVG").remove();
 
-    var svg_elem = generate_svg();
+   // var svg_elem = generate_svg();
+	var svg_elem = fractala_svg_renderer.render();
 
     $("body").append(svg_elem);
 }
