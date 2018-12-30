@@ -7,16 +7,17 @@
 TODO:
 SOON...
 * get jquery 3.3.1
+* more log channeling
 * separate data func. from interface
-* ID EVERYTHING!
+* ID EVERYTHING! (working on it)
 * save business
 	- cancellation
 * styles to dedicated css
 * color picker?
 	- better placement, feedback?
-* remove layer
+* remove/delete layer
 * configurable layer names
-	-will users care about layer names?
+	-will users even care about layer names?
 * way to highlight layer?
 * clone layer?
 * layer visibility?
@@ -140,8 +141,11 @@ body {
 <script type="application/javascript" src="libs/WatchedValue.js"></script>
 <script type="application/javascript" src="libs/modalize.js"></script>
 <script type="application/javascript" src="libs/popupper.js"></script>
+<script type="application/javascript" src="libs/LogChannels.js"></script>
 <script type="application/javascript" src="svgee.js"></script>
 <script type="application/javascript" src="fncColorPicker.js"></script>
+
+<script type="application/javascript" src="Fractala.js"></script>
 
 <!-- DATA -->
 <script type="application/javascript" src="layers.js"></script>
@@ -153,6 +157,10 @@ body {
 <script type="application/javascript" src="ui/edit_layer_popup.js"></script>
 
 <script type="application/javascript">
+
+// ----- EARLY INITS -----
+LogChannels.CaptureConsoleLog();
+LogChannels.EnableChannel(popupper_channel_name, false);
 
 // ----- GLOBALS -----
 var view_width;

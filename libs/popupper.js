@@ -8,6 +8,10 @@ TODO:
 	-optional dismissal on item click
 */
 
+// ugh, hanging all out in the global scope, sort out later I guess
+// All that work, and ECMA still can't give us a decent static variable implementation
+const popupper_channel_name = "popupper";
+
 // must have jquery
 if (typeof window.jQuery === "undefined")
 {
@@ -15,6 +19,9 @@ if (typeof window.jQuery === "undefined")
 }
 else
 {
+// no way am I typing that name every time...
+let pcn = popupper_channel_name;
+
 var popupper = 
 {
 	// -------------------------------------------------------------------------
@@ -42,7 +49,7 @@ var popupper =
 		// -----------------------------------------------------------
 		this.dismiss = function()
 		{
-			console.log("popupper:dismiss() parent id: " + this.$parent.attr("id"));
+			console.log(pcn, "dismiss() parent id: " + this.$parent.attr("id"));
 			// this.$body_cover.css({"display":"none"});
 			this.$menu_content.css({"display":"none"});
 
@@ -53,7 +60,7 @@ var popupper =
 		// -------------------------------------------------------------------------
 		this.start = function()
 		{
-			console.log("popupper:start() parent id:" + this.$parent.attr("id"));
+			console.log(pcn, "start() parent id:" + this.$parent.attr("id"));
 			this.$menu_content.css({"display":"initial"});
 		};
 
@@ -83,11 +90,11 @@ var popupper =
 		// want to know when mouse has entered popup
 		this.entered_popup = false;
 		this.$menu_content.mouseenter( (event) => {
-			console.log(`popupper parent(${$parent.attr("id")}): entered menu`);
+			console.log(pcn, `parent(${$parent.attr("id")}): entered menu`);
 			this.entered_popup = true;
 		});
 		// this.$menu_content.mouseleave( (event) => {
-		// 	console.log("popupper : left menu");
+		// 	console.log(pcn, " : left menu");
 		// 	this.dismiss();
 		// });
 
