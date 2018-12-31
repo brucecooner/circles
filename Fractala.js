@@ -30,7 +30,7 @@ var Fractala = {
 	{
 		this.layer_index = Fractala.getNextLayerIndex();
 
-		this.name = `layer_${this.layer_index}`;
+		this.name = `circles_${this.layer_index}`;
 
 		Object.assign(this, Fractala.layer_default_parameters);
 		Object.assign(this, parameters);

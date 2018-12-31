@@ -6,8 +6,8 @@
 <!--
 TODO:
 SOON...
+* layer highlight is broken
 * clear button
-* update layer list when layer color changes
 * all around better color handling
 * better defaults mgmt/surfacing?
 * layer list stuff to own file
@@ -63,6 +63,7 @@ body {
 	 margin: 0px 0px 0px 0px;
 	 position: relative;
 	 font-family:sans-serif;
+	 background-color:hsl(0,0%,93%)
     /* background-color:blue; */
 }
 
@@ -79,6 +80,8 @@ body {
 	padding: 2px;
 }
 
+/* --- LAYER LIST --- */
+
 .layerListContainer {
 	position:fixed;
 	float:left;
@@ -93,10 +96,40 @@ body {
 	min-width:10%;
 }
 
-.layerListContainer ul {
+.layerListContainer table {
 	margin:2px;
-	padding:15px;
+	padding:10px 6px 6px 6px;
+	list-style-type:none;
+	border-collapse: collapse;
 }
+
+.layerList_Item {
+	padding:0px 2px 0px 2px;
+	margin:2px 0px 2px 0px;
+	/* border-radius: 2px 8px 2px 8px; */
+	border-radius: 2px 2px 2px 2px;
+}
+
+.layerListItemName {
+	margin:0px;
+	border-radius:3px 0px 0px 3px;
+}
+
+.layerListActiveLayerIndicator {
+	margin:0px;
+	background-color:yellow;
+	/* border:1px solid gray; */
+}
+
+tr.layerList_Item[data-active-layer=false] td.layerListActiveLayerIndicator {
+	display:none;
+}
+
+tr.layerList_Item[data-active-layer=true] td.layerListActiveLayerIndicator {
+	display:inline;
+}
+
+/* ------- */
 
 .menuBarClass button {
     display:block;
@@ -135,25 +168,6 @@ body {
 
 #colorPickId {
 	background-color:black;
-}
-
-.layerListItemName {
-	display:inline;
-}
-
-.layerListActiveLayerIndicator {
-	background-color:rgb(0,255,0);
-	border:1px solid black;
-	/* border-top-right-radius: 5px; */
-	/* border-bottom-right-radius: 5px; */
-}
-
-li.layerList_Item[data-active-layer=false] .layerListActiveLayerIndicator {
-	display:none;
-}
-
-li.layerList_Item[data-active-layer=true] .layerListActiveLayerIndicator {
-	display:inline;
 }
 
 </style>
@@ -308,59 +322,41 @@ function getNextStroke()
 // --------------------------------------------------------------------
 function generateLayerListItem(layer_name,background_color)
 {
-	var $layer_list_item = $(`<li class="layerList_Item" ></li>`);
+	var $layer_list_row_item = $(`<tr class="layerList_Item" ></tr>`);
 
-	$layer_list_item.attr( {	"data-layer-name": layer_name,
-										"id": `layerList_Item_${layer_name}_Id`,
+	$layer_list_row_item.attr( {	"data-layer-name": layer_name,
+										"id": `layerList_RowItem_${layer_name}_Id`,
 										"data-active-layer": false,
 										"data-layer-name": layer_name, } );
 
-	// $layer_list_item.attr("data-layer-name", layer_name);
-	// $layer_list_item.attr("id", `layerList_Item_${layer_name}_Id`);
-	// $layer_list_item.attr("data-active-layer", false);
-	// $layer_list_item.attr("data-layer-name", layer_name);
 
-	$layer_list_item.css({"background-color":background_color }); // ??
+	var $name_td = $(`<td class="layerListItemName" id="layerListItemName_${layer_name}_Id">${layer_name}</td>`);
+	// $name = $(`<div class="layerListItemName" id="layerListItemName_${layer_name}_Id">${layer_name}</div>`);
+	$name_td.css({"background-color":background_color }); // ??
+	// $name_td.append($name);
 
-	$name = $(`<div class="layerListItemName" id="layerListItemName_${layer_name}_Id">${layer_name}</div>`);
-	// $name.css({"background-color":background_color });
-	var $active_indicator = $(`<div class="layerListActiveLayerIndicator">_</div>`);
-	$active_indicator.attr("id", `layerListItemActiveIndicator_${layer_name}_Id` );
+	var $active_td = $('<td class="layerListActiveLayerIndicator">_</td>');
+	// var $active_indicator = $(`<div class="layerListActiveLayerIndicator">_</div>`);
+	$active_td.attr("id", `layerListItemActiveIndicator_${layer_name}_Id` );
+	// $active_td.append($active_indicator);
+	// $active_td.click( asdf )
 
-	$layer_list_item.append($name);
-	$layer_list_item.append($active_indicator);
+	$layer_list_row_item.append($name_td);
+	$layer_list_row_item.append($active_td);
 
-	// $layer_list_item.css({"background-color":background_color });
-
-	// handlers
-	popupMenuActionHandleCallback = function(...args)
-	{
-		$layer_list_item.$popup_menu.dismiss();
-		onEditLayerPopupMenuAction(...args);
-	}
-
-	$layer_list_item.$popup_menu = generateEditLayerPopupMenu($layer_list_item, 
-																	layer_name, 
-																	popupMenuActionHandleCallback );
-
-	$layer_list_item.mouseleave( (evt) => {
+	$layer_list_row_item.mouseleave( (evt) => {
 		highlightLayer("");
-		$layer_list_item.$popup_menu.dismiss();
+		// $layer_list_row_item.$popup_menu.dismiss();
 	} );
 
 	// TODO: send to more mature layer click handler
-	$layer_list_item.click( (event) => 
+	$layer_list_row_item.click( (event) => 
 	{ 
 		console.log("clicked layer list item"); 
 		setCurrentLayer(layer_name); 
-
-		var popup_menu_position = $layer_list_item.position();
-		popup_menu_position.left += $layer_list_item.width();
-		$layer_list_item.$popup_menu.set_position(popup_menu_position);
-		$layer_list_item.$popup_menu.start(popup_menu_position);
 	});
 
-	return $layer_list_item;
+	return $layer_list_row_item;
 }
 
 // --------------------------------------------------------------------
@@ -417,10 +413,10 @@ function highlightLayer(layer_name)
 }
 
 // --------------------------------------------------------------------
-function onEditLayerPopupMenuAction(action_text, layer_name)
-{
-	console.log("onEditLayerPopupMenuAction: " + action_text + "->" + layer_name);
-}
+// function onEditLayerPopupMenuAction(action_text, layer_name)
+// {
+// 	console.log("onEditLayerPopupMenuAction: " + action_text + "->" + layer_name);
+// }
 
 // --------------------------------------------------------------------
 // --------------------------------------------------------------------
@@ -610,7 +606,7 @@ function onColorPicked(color)
 
 	// fix the layer list item background color
 	var background_color_css = { "background-color":getColorString(current_color.get()) };
-	$(`.layerList_Item[data-layer-name=${current_layer_name}]`).css(background_color_css);
+	$(`.layerList_Item[data-layer-name=${current_layer_name}] .layerListItemName`).css(background_color_css);
 
 	$("#colorPickButtonId").css(background_color_css);
 }
@@ -624,8 +620,9 @@ function onColorPicked(color)
 
 <div id="layerListContainerId" class="layerListContainer">
 	<button id="addLayerButtonId" onclick="onAddLayer()">+</button>
-	<ul id="layerListId">
-	</ul>
+	<!-- <ul id="layerListId">
+	</ul> -->
+	<table id="layerListId"></table>
 </div>
 <div class="menuBarClass" id="menuBarId">
 	<table>
