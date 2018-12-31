@@ -1,7 +1,7 @@
 <html>
 
 <head>
-<title>circles</title>
+<title>fractala</title>
 
 <!--
 TODO:
@@ -17,8 +17,6 @@ SOON...
 * log channeling on watched values
 * separate data func. from interface
 * ID EVERYTHING! (working on it)
-* save business
-	- cancellation
 * styles to dedicated css
 * color picker?
 	- better placement, feedback?
@@ -139,7 +137,6 @@ body {
 	background-color:black;
 }
 
-/* asdf */
 .layerListItemName {
 	display:inline;
 }
@@ -259,12 +256,16 @@ function syncRangeInputs()
 // ----------------------------------------------------------------------------
 function setCurrentLayer(layer_name)
 {
+	var layer = fractala.getLayer(layer_name);
+
 	$(`.layerList_Item`).attr("data-active-layer", false);
 
 	current_layer_name = layer_name;
 	console.log("setting layer to " + layer_name);
 
 	$(`.layerList_Item[data-layer-name=${current_layer_name}]`).attr("data-active-layer", true);
+
+	$("#colorPickButtonId").css("background-color",layer.stroke);
 
 	syncRangeInputs();
 }
@@ -294,15 +295,35 @@ function getNextStroke()
 }
 
 // --------------------------------------------------------------------
+// function renderLayerList()
+// {
+// 	fractala.layer_order.forEach( (current_layer_name) => {
+// 		var current_layer = fractala.getLayer(current_layer_name);
+// 		var $current_item = generateLayerListItem(current_layer_name, current_layer.stroke);
+
+// 		$("#layerListId").prepend($list_item);
+// 	});
+// }
+
+// --------------------------------------------------------------------
 function generateLayerListItem(layer_name,background_color)
 {
 	var $layer_list_item = $(`<li class="layerList_Item" ></li>`);
-	$layer_list_item.attr("data-layer-name", layer_name);
-	$layer_list_item.attr("id", `layerList_Item_${layer_name}_Id`);
-	$layer_list_item.attr("data-active-layer", false);
+
+	$layer_list_item.attr( {	"data-layer-name": layer_name,
+										"id": `layerList_Item_${layer_name}_Id`,
+										"data-active-layer": false,
+										"data-layer-name": layer_name, } );
+
+	// $layer_list_item.attr("data-layer-name", layer_name);
+	// $layer_list_item.attr("id", `layerList_Item_${layer_name}_Id`);
+	// $layer_list_item.attr("data-active-layer", false);
+	// $layer_list_item.attr("data-layer-name", layer_name);
+
+	$layer_list_item.css({"background-color":background_color }); // ??
 
 	$name = $(`<div class="layerListItemName" id="layerListItemName_${layer_name}_Id">${layer_name}</div>`);
-	$name.css({"background-color":background_color });
+	// $name.css({"background-color":background_color });
 	var $active_indicator = $(`<div class="layerListActiveLayerIndicator">_</div>`);
 	$active_indicator.attr("id", `layerListItemActiveIndicator_${layer_name}_Id` );
 
@@ -586,6 +607,12 @@ function onColorPicked(color)
 		getCurrentLayer().stroke=getColorString(current_color.get());
 		render();
 	}
+
+	// fix the layer list item background color
+	var background_color_css = { "background-color":getColorString(current_color.get()) };
+	$(`.layerList_Item[data-layer-name=${current_layer_name}]`).css(background_color_css);
+
+	$("#colorPickButtonId").css(background_color_css);
 }
 
 </script>
