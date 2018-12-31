@@ -6,6 +6,7 @@
 <!--
 TODO:
 SOON...
+* clear button
 * update layer list when layer color changes
 * all around better color handling
 * better defaults mgmt/surfacing?
@@ -63,6 +64,7 @@ body {
     height:100%;
 	 margin: 0px 0px 0px 0px;
 	 position: relative;
+	 font-family:sans-serif;
     /* background-color:blue; */
 }
 
@@ -205,6 +207,8 @@ var highlighted_layer = "";
 var color_picker = null;
 var color_picker_dialog = null;
 
+// ---- SAVE ----
+var save_dialog = null;
 
 var number_of_spokes = WatchedValue.Create(0, //default_number_of_spokes,
 		[function(value) {	console.log("num spokes = " + value);
@@ -460,6 +464,7 @@ $(document).ready( function()
 	// --- UI INIT ---
 	color_picker = new fncColorPicker.Create({color_picked_handler:onColorPicked, size:250, container_div_id:"colorpick", hue:current_color.hue, rot_offset:-Math.PI * 0.5});
 	color_picker_dialog = new modalize.Create($("body"), color_picker.$container_div, "colorpick_cover", {left:50,top:20});
+	save_dialog = new SaveDialog.Create();
 
 	 // color the picker button with current color
 	 // TODO: make function
@@ -538,7 +543,6 @@ function render()
 
 
 // TODO: move upward
-var save_modal = null;
 var svg_blob_url = null;
 
 var svg_file_version = 1;
@@ -553,9 +557,7 @@ function onSave()
 	}
 	svg_blob_url = show_svg();
 
-	// TODO: uhhh, fix modal again
-	save_modal = openSaveDialog(svg_blob_url);
-	save_modal.start();
+	save_dialog.start(svg_blob_url);
 }
 
 // ----------------------------------------------------------------------------
@@ -564,8 +566,6 @@ function onAddLayer()
 	var new_layer = addLayer();
 	setCurrentLayer(new_layer.name);
 	render();
-
-	console.log(render_order);
 }
 
 // ----------------------------------------------------------------------------

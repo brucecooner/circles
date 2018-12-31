@@ -46,7 +46,7 @@ var modalize =
 		// -----------------------------------------------------------
 		// --- "CONSTS" ---
 		// -----------------------------------------------------------
-		this.modal_id_suffix = "_modal_id";
+		this.body_cover_id_suffix = "_body_cover_id";
 
 		this.body_cover_css = 
 		{
@@ -59,6 +59,7 @@ var modalize =
 			"top":"0px",
 			"width":"100%",
 			"height":"100%",
+			"background-color":"rgba(255,0,0,0.5)",
 		};
 
 		// -----------------------------------------------------------
@@ -94,7 +95,7 @@ var modalize =
 
 		// --- INIT ---
 		this.position = position || {left:0, top:0};
-		this.body_cover_id = modal_id + this.modal_id_suffix;
+		this.body_cover_id = modal_id + this.body_cover_id_suffix;
 
 		this.$parent = $parent;
 
@@ -106,6 +107,9 @@ var modalize =
 		this.$body_cover = $(`<div id="${this.body_cover_id}"></div>`);
 		this.$body_cover.css( this.body_cover_css );
 		this.$body_cover.click( function(event) {
+
+			// ignore clicks over modal content
+
 			this.dismiss();
 		}.bind(this) );
 
