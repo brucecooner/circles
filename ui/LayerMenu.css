@@ -1,0 +1,66 @@
+/* .layerListContainer { */
+.layersMenu_div {
+	position:fixed;
+	float:left;
+	left:0px;
+	top:0px;
+	border-width:0px 2px 2px 0px;
+	border-color:black;
+	border-style:solid;
+	border-bottom-right-radius: 3px;
+	background-color:lightgray;
+	padding: 2px;
+	min-width:10%;
+}
+
+.layersMenu_button_add {
+	background-color:lightcoral;
+	border-radius:7px;
+	border-width:0px;
+	margin:2px;
+	/* padding:2px; */
+	/* border-color:maroon; */
+	/* border-style:solid;
+	border-color:black;
+	border-width:2px; */
+}
+
+.layersMenu_button_add:hover {
+	background-color:red;
+}
+
+.layersMenu_button_add:hover::after {
+	content:" add";
+}
+
+.layersMenu_div .layers_table {
+	margin:2px;
+	padding:10px 6px 6px 6px;
+	/* list-style-type:none; */
+	border-collapse: collapse;
+}
+
+.layersMenu_table_row {
+	padding:0px 2px 0px 2px;
+	margin:2px 0px 2px 0px;
+}
+
+.layersMenu_table_row_td_name {
+	margin:0px;
+	border-radius:3px 0px 0px 3px;
+	border-radius: 8px 0px 0px 8px;
+}
+
+.layersMenu_table_row_td_editing {
+	margin:0px;
+	background-color:yellow;
+	/* border:1px solid gray; */
+}
+
+.layersMenu_table_row[data-editing-layer=false] .layersMenu_table_row_td_editing {
+	display:none;
+}
+
+.layersMenu_table_row[data-editing-layer=true] .layersMenu_table_row_td_editing {
+	display:inline;
+}

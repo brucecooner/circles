@@ -82,7 +82,7 @@ body {
 
 /* --- LAYER LIST --- */
 
-.layerListContainer {
+/* .layerListContainer {
 	position:fixed;
 	float:left;
 	left:0px;
@@ -99,26 +99,23 @@ body {
 .layerListContainer table {
 	margin:2px;
 	padding:10px 6px 6px 6px;
-	list-style-type:none;
 	border-collapse: collapse;
 }
 
 .layerList_Item {
 	padding:0px 2px 0px 2px;
 	margin:2px 0px 2px 0px;
-	/* border-radius: 2px 8px 2px 8px; */
-	border-radius: 2px 2px 2px 2px;
 }
 
 .layerListItemName {
 	margin:0px;
 	border-radius:3px 0px 0px 3px;
+	border-radius: 8px 0px 0px 8px;
 }
 
 .layerListActiveLayerIndicator {
 	margin:0px;
 	background-color:yellow;
-	/* border:1px solid gray; */
 }
 
 tr.layerList_Item[data-active-layer=false] td.layerListActiveLayerIndicator {
@@ -127,7 +124,7 @@ tr.layerList_Item[data-active-layer=false] td.layerListActiveLayerIndicator {
 
 tr.layerList_Item[data-active-layer=true] td.layerListActiveLayerIndicator {
 	display:inline;
-}
+} */
 
 /* ------- */
 
@@ -136,25 +133,6 @@ tr.layerList_Item[data-active-layer=true] td.layerListActiveLayerIndicator {
     border-radius: 3px;
 }
 
-#addLayerButtonId {
-	background-color:lightcoral;
-	border-radius:7px;
-	border-width:0px;
-	margin:2px;
-	/* padding:2px; */
-	/* border-color:maroon; */
-	/* border-style:solid;
-	border-color:black;
-	border-width:2px; */
-}
-
-#addLayerButtonId:hover {
-	background-color:red;
-}
-
-#addLayerButtonId:hover::after {
-	content:" add";
-}
 
 .modal {
 	width:50%;
@@ -188,21 +166,28 @@ tr.layerList_Item[data-active-layer=true] td.layerListActiveLayerIndicator {
 <script type="application/javascript" src="FractalaSVGRenderer.js"></script>
 
 <!-- DATA -->
-<script type="application/javascript" src="layers.js"></script>
+<!-- <script type="application/javascript" src="layers.js"></script> -->
 
  <!-- UI -->
-<script type="application/javascript" src="save_dialog.js"></script>
+ <link rel="stylesheet" type="text/css" href="ui/LayerMenu.css">
+ <script type="application/javascript" src="ui/LayerMenu.js"></script>
 
-<link rel="stylesheet" type="text/css" href="ui/edit_layer_popup.css">
-<script type="application/javascript" src="ui/edit_layer_popup.js"></script>
+<script type="application/javascript" src="ui/save_dialog.js"></script>
+
+<!-- <link rel="stylesheet" type="text/css" href="ui/edit_layer_popup.css">
+<script type="application/javascript" src="ui/edit_layer_popup.js"></script> -->
 
 <script type="application/javascript">
 
 // ----- EARLY INITS -----
 LogChannels.CaptureConsoleLog();
-LogChannels.EnableChannel(popupper_channel_name, false);
+
+// LogChannels.EnableChannel(popupper_channel_name, false);
+LogChannels.EnableChannel(LayerMenu.log_channel, true);
 
 // ----- GLOBALS -----
+var main_log_channel = "main";
+
 var fractala = null;
 var fractala_svg_renderer = null;
 
@@ -210,6 +195,9 @@ var current_layer_name = "";
 
 var view_width;
 var view_height;
+
+// var layer_manager = null;
+var layer_menu = null;
 
 var highlighted_layer = "";
 
@@ -412,11 +400,43 @@ function highlightLayer(layer_name)
 	}
 }
 
+var layers_menu_log_channel = "layersMenu";
+
 // --------------------------------------------------------------------
-// function onEditLayerPopupMenuAction(action_text, layer_name)
-// {
-// 	console.log("onEditLayerPopupMenuAction: " + action_text + "->" + layer_name);
-// }
+function on_LayersMenuAddLayer(action)
+{
+	console.log(layers_menu_log_channel, "on_LayersMenuAddLayer()"); 
+
+	var new_layer = fractala.addCirclesLayer({stroke:getColorString(current_color.get())});
+
+	layer_menu.addLayer(new_layer.name);
+	layer_menu.setEditingLayer(new_layer.name);
+
+	return new_layer;
+}
+
+// --------------------------------------------------------------------
+var layersMenu_actionMap = {
+	"add_layer":on_LayersMenuAddLayer,
+}
+
+// --------------------------------------------------------------------
+function onLayersMenuAction(action)
+{
+	console.log(layers_menu_log_channel, "layers menu action"); 
+	console.log(layers_menu_log_channel, action);
+
+	if (layersMenu_actionMap.hasOwnProperty(action.type))
+	{
+		var action_handler = layersMenu_actionMap[action.type];
+
+		action_handler(action);
+	}
+	else
+	{
+		console.log(layers_menu_log_channel, `ERROR: action type ${action.type} not mapped to handler`);
+	}
+}
 
 // --------------------------------------------------------------------
 // --------------------------------------------------------------------
@@ -488,9 +508,16 @@ $(document).ready( function()
 	 $("#colorPickButtonId").css("background-color", getColorString(current_color.get()));
 
 	// default the model
-	var default_layer = addLayer();
+	// var default_layer = addLayer();
 	// current_layer_name = default_layer.name;
-	setCurrentLayer(default_layer.name);
+	// setCurrentLayer(default_layer.name);
+
+	// --- UI INIT ---
+	layer_menu = new LayerMenu(fractala, onLayersMenuAction);
+	layer_menu.generateMenu();
+	$("body").append(layer_menu.$menu_content);
+
+	var new_layer = on_LayersMenuAddLayer({});
 
 	render();
 });
@@ -618,12 +645,12 @@ function onColorPicked(color)
 <!-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  -->
 <body onload="onBodyLoad()">
 
-<div id="layerListContainerId" class="layerListContainer">
+<!-- <div id="layerListContainerId" class="layerListContainer">
 	<button id="addLayerButtonId" onclick="onAddLayer()">+</button>
-	<!-- <ul id="layerListId">
-	</ul> -->
 	<table id="layerListId"></table>
-</div>
+</div> -->
+
+
 <div class="menuBarClass" id="menuBarId">
 	<table>
 		<tr><td id="numSpokesValueId">num</td><td id="numSpokesRangeContainer"></td></tr>
