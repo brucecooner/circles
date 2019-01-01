@@ -32,53 +32,59 @@ class LayerMenu
 	row_editing_td_id(layer_name)	{ return `${this.row_editing_td_class}_${layer_name}_id`; };
 
 	// --- menu action types ---
+	// TODO: use ActionTypes (need external def tho)
 	get action_add_layer()		{ return "add_layer"};
 	
 	// -------------------------------------------------------------------------
 	constructor(fractala, menu_action_callback)
 	{
-		console.log(this.log_channel, "Create()");
+		console.log(this.log_channel, "constructor");
 
 		this.fractala = fractala;
 		this.menu_action_callback = menu_action_callback;
 
 		this.name = "LayerMenuClass";
 
-		this.editing_layers = [];
+		this.editing_layer = "";
 	};
 
 	// -------------------------------------------------------------------------
-	syncToEditingLayers()
-	{
-		console.log(this.log_channel, `syncToEditingLayers()`);
+	// syncToEditingLayers()
+	// {
+	// 	console.log(this.log_channel, `syncToEditingLayers()`);
 
-		$(`.${this.row_class}`).attr("data-editing-layer", false);
+	// 	$(`.${this.row_class}`).attr("data-editing-layer", false);
 
-		this.editing_layers.forEach( (current_layer_name) => {
-			console.log(this.log_channel, `syncing layer ${current_layer_name}`);
-			$(`#${this.row_id(current_layer_name)}`).attr( "data-editing-layer", true);
-		});
-	}
+	// 	this.editing_layers.forEach( (current_layer_name) => {
+	// 		console.log(this.log_channel, `syncing layer ${current_layer_name}`);
+	// 		$(`#${this.row_id(current_layer_name)}`).attr( "data-editing-layer", true);
+	// 	});
+	// }
 
 	// -------------------------------------------------------------------------
 	setEditingLayer(layer_name)
 	{
 		console.log(this.log_channel, `setEditingLayer: ${layer_name}`);
 
-		this.editing_layers = [layer_name];
-		console.log(this.editing_layers);
+		this.editing_layer = layer_name;
+		console.log(this.editing_layer);
 
-		this.syncToEditingLayers();
+		$(`.${this.row_class}`).attr("data-editing-layer", false);
+		$(`#${this.row_id(this.editing_layer)}`).attr( "data-editing-layer", true);
+
+		// TODO:use action defs!
+		this.dispatchAction("set_editing_layers");
 	}
 
 	// -------------------------------------------------------------------------
 	dispatchAction(action_type)
 	{
+		// TODO: need that action class
 		var action = {};
 
-		action.type = action_type;
+		action.action_type = action_type;
 
-		action.layers = [];
+		action.layers = [this.editing_layer];
 
 		this.menu_action_callback(action);
 	};
@@ -161,16 +167,34 @@ class LayerMenu
 	}
 
 	// -------------------------------------------------------------------------
-	// TODO: get correct layer color
+	// Assumptions:
+	//	* layer_name already created
 	addLayer(layer_name)
 	{
-		var temp_color = "rgb(200,0,0)";
+		var layer = fractala.getLayer(layer_name);
 
-		var $row_item = this.generateLayerListItem(layer_name, temp_color);
+		var $row_item = this.generateLayerListItem(layer_name, layer.stroke);
 
-		this.$table.append($row_item);
+		// for now this will work, but will eventually need precise control over
+		// menu ordering vis-a-vis render ordering
+		this.$table.prepend($row_item);
 	}
-	
+
+	// -------------------------------------------------------------------------
+	getEditingLayerNameTd()
+	{
+		return $(`#${this.row_name_td_id(this.editing_layer)}`);
+	}
+
+	// -------------------------------------------------------------------------
+	// sets background color of editing layer name item
+	setEditingLayerColor(color)
+	{
+		var $editing_name_td = this.getEditingLayerNameTd();
+
+		$editing_name_td.css( "background-color", color);
+	}
+
 };
 
 

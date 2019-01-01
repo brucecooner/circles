@@ -10,12 +10,11 @@ SOON...
 * clear button
 * all around better color handling
 * better defaults mgmt/surfacing?
-* layer list stuff to own file
 * split out layer types (eventually)
 * do proper accessors on stuff
 * get jquery 3.3.1
 * log channeling on watched values
-* separate data func. from interface
+* separate data func. from interface (working on it)
 * ID EVERYTHING! (working on it)
 * styles to dedicated css
 * color picker?
@@ -23,9 +22,6 @@ SOON...
 * remove/delete layer
 * configurable layer names
 	-will users even care about layer names?
-* way to highlight layer?
-* clone layer?
-* layer visibility?
 * dismissable editor
 * the stroke/color thing is getting confusing, sort out
 
@@ -33,9 +29,10 @@ LAYER UI STUFF
 * expandable layer menu?
 * currently editing layer
 * layer visibility (control alpha probably)
+* way to highlight layer?
+* clone layer?
 
 MODAL NEEDS
-* placement
 * dismissal callback?
 
 LESS SOON...
@@ -79,54 +76,6 @@ body {
 	background-color:lightgray;
 	padding: 2px;
 }
-
-/* --- LAYER LIST --- */
-
-/* .layerListContainer {
-	position:fixed;
-	float:left;
-	left:0px;
-	top:0px;
-	border-width:0px 2px 2px 0px;
-	border-color:black;
-	border-style:solid;
-	border-bottom-right-radius: 3px;
-	background-color:lightgray;
-	padding: 2px;
-	min-width:10%;
-}
-
-.layerListContainer table {
-	margin:2px;
-	padding:10px 6px 6px 6px;
-	border-collapse: collapse;
-}
-
-.layerList_Item {
-	padding:0px 2px 0px 2px;
-	margin:2px 0px 2px 0px;
-}
-
-.layerListItemName {
-	margin:0px;
-	border-radius:3px 0px 0px 3px;
-	border-radius: 8px 0px 0px 8px;
-}
-
-.layerListActiveLayerIndicator {
-	margin:0px;
-	background-color:yellow;
-}
-
-tr.layerList_Item[data-active-layer=false] td.layerListActiveLayerIndicator {
-	display:none;
-}
-
-tr.layerList_Item[data-active-layer=true] td.layerListActiveLayerIndicator {
-	display:inline;
-} */
-
-/* ------- */
 
 .menuBarClass button {
     display:block;
@@ -187,6 +136,7 @@ LogChannels.EnableChannel(LayerMenu.log_channel, true);
 
 // ----- GLOBALS -----
 var main_log_channel = "main";
+var edit_log_channel = "edit";
 
 var fractala = null;
 var fractala_svg_renderer = null;
@@ -196,7 +146,6 @@ var current_layer_name = "";
 var view_width;
 var view_height;
 
-// var layer_manager = null;
 var layer_menu = null;
 
 var highlighted_layer = "";
@@ -209,40 +158,13 @@ var color_picker_dialog = null;
 // ---- SAVE ----
 var save_dialog = null;
 
-var number_of_spokes = WatchedValue.Create(0, //default_number_of_spokes,
-		[function(value) {	console.log("num spokes = " + value);
-									getCurrentLayer().number_of_spokes = value;
-									render();
-								}]);
-
-var spoke_length = WatchedValue.Create(0, //default_spoke_length,
-		[function(value) {   console.log("spoke length = " + value);
-									getCurrentLayer().spoke_length = value;
-									render();
-								}]);
-
-var circle_radius = WatchedValue.Create(0,//default_circle_radius,
-		[function(value) {   console.log("radius = " + value);
-									getCurrentLayer().radius = value;
-									render();
-								}]);
-
-var stroke_width = WatchedValue.Create(0,//default_stroke_width,
-		[function(value) {	console.log("stroke width = " + value);
-									getCurrentLayer().stroke_width = value;
-									render();
-									}]);
-
-var spoke_rot_offset = WatchedValue.Create(0,//default_spoke_rot_offset,
-		[function(value) {	console.log("spoke rot offset = " + value);
-									getCurrentLayer().spoke_rot_offset = value;
-									render();
-									}]);
-
 var current_color = WatchedValue.Create(	{hue:0, saturation:100, lightness:50},
-		[function(value) {	console.log("current_color = " + JSON.stringify(value));
+		[function(value) {	console.log(edit_log_channel, "current_color = " + JSON.stringify(value));
+									getCurrentLayer().stroke = getColorString(value);
 									$("#colorPickButtonId").css({"background-color":getColorString(value)});
+									render();
 									}]);
+
 // --------------------------------------------------------
 function syncRangeInputs()
 {
@@ -275,89 +197,7 @@ function setCurrentLayer(layer_name)
 // ----------------------------------------------------------------------------
 function getCurrentLayer()
 {
-	return fractala.getLayer(current_layer_name);
-}
-
-// --------------------------------------------------------------------
-function getNextName()
-{
-	var name = "c" + next_name_index;
-
-	next_name_index += 1;
-
-	return name;
-}
-
-// --------------------------------------------------------------------
-function getNextStroke()
-{
-	var stroke = getColorString(current_color.get());
-
-	return stroke;
-}
-
-// --------------------------------------------------------------------
-// function renderLayerList()
-// {
-// 	fractala.layer_order.forEach( (current_layer_name) => {
-// 		var current_layer = fractala.getLayer(current_layer_name);
-// 		var $current_item = generateLayerListItem(current_layer_name, current_layer.stroke);
-
-// 		$("#layerListId").prepend($list_item);
-// 	});
-// }
-
-// --------------------------------------------------------------------
-function generateLayerListItem(layer_name,background_color)
-{
-	var $layer_list_row_item = $(`<tr class="layerList_Item" ></tr>`);
-
-	$layer_list_row_item.attr( {	"data-layer-name": layer_name,
-										"id": `layerList_RowItem_${layer_name}_Id`,
-										"data-active-layer": false,
-										"data-layer-name": layer_name, } );
-
-
-	var $name_td = $(`<td class="layerListItemName" id="layerListItemName_${layer_name}_Id">${layer_name}</td>`);
-	// $name = $(`<div class="layerListItemName" id="layerListItemName_${layer_name}_Id">${layer_name}</div>`);
-	$name_td.css({"background-color":background_color }); // ??
-	// $name_td.append($name);
-
-	var $active_td = $('<td class="layerListActiveLayerIndicator">_</td>');
-	// var $active_indicator = $(`<div class="layerListActiveLayerIndicator">_</div>`);
-	$active_td.attr("id", `layerListItemActiveIndicator_${layer_name}_Id` );
-	// $active_td.append($active_indicator);
-	// $active_td.click( asdf )
-
-	$layer_list_row_item.append($name_td);
-	$layer_list_row_item.append($active_td);
-
-	$layer_list_row_item.mouseleave( (evt) => {
-		highlightLayer("");
-		// $layer_list_row_item.$popup_menu.dismiss();
-	} );
-
-	// TODO: send to more mature layer click handler
-	$layer_list_row_item.click( (event) => 
-	{ 
-		console.log("clicked layer list item"); 
-		setCurrentLayer(layer_name); 
-	});
-
-	return $layer_list_row_item;
-}
-
-// --------------------------------------------------------------------
-function addLayer()
-{
-	var new_layer = fractala.addCirclesLayer({stroke:getColorString(current_color.get())});
-
-	var $list_item = generateLayerListItem(new_layer.name, new_layer.stroke);
-	
-	$("#layerListId").prepend($list_item);
-
-	// return next_name;
-	return new_layer;
+	return fractala.getLayer(layer_menu.editing_layer);
 }
 
 // --------------------------------------------------------------------
@@ -400,41 +240,90 @@ function highlightLayer(layer_name)
 	}
 }
 
-var layers_menu_log_channel = "layersMenu";
+// --- ACTION HANDLERS ---
+// TODO: own file ?
+
+// ============================================================================
+var ActionType = {
+	add_layer:"add_layer" ,
+	set_layer_property:"set_layer_property",
+	set_editing_layers:"set_editing_layers",
+};
+
+class Action
+{
+	// -------------------------------------------------------------------------
+	// receives:
+	//		-action_type:string
+	//		-layers:[string,...]
+	//		-parameters:{layer_property:string, value:any}
+	constructor(action_type, layers, parameters)
+	{
+		this.action_type = action_type;
+		this.layers = layers;
+
+		Object.assign(this, parameters);
+	}
+};
+
+var action_log_channel = "action_handlers";
 
 // --------------------------------------------------------------------
-function on_LayersMenuAddLayer(action)
+function handleAction_addLayer(action)
 {
-	console.log(layers_menu_log_channel, "on_LayersMenuAddLayer()"); 
+	console.log(action_log_channel, "handleAction_addLayer()"); 
 
+	// model
 	var new_layer = fractala.addCirclesLayer({stroke:getColorString(current_color.get())});
 
+	// interface
 	layer_menu.addLayer(new_layer.name);
 	layer_menu.setEditingLayer(new_layer.name);
 
 	return new_layer;
-}
+};
 
 // --------------------------------------------------------------------
-var layersMenu_actionMap = {
-	"add_layer":on_LayersMenuAddLayer,
-}
-
-// --------------------------------------------------------------------
-function onLayersMenuAction(action)
+function setLayerProperty(property_key, layers, value )
 {
-	console.log(layers_menu_log_channel, "layers menu action"); 
-	console.log(layers_menu_log_channel, action);
+	console.log(action_log_channel, `setLayerProp(${layers[0]}, ${value})`);
 
-	if (layersMenu_actionMap.hasOwnProperty(action.type))
+	// model
+	fractala.getLayer(layers[0])[property_key] = value;
+
+	// note: no interface effects here...
+
+	render();
+};
+
+// --------------------------------------------------------------------
+function handleAction_setEditingLayers(action)
+{
+	syncRangeInputs();
+}
+
+// --------------------------------------------------------------------
+var action_map = {};
+
+action_map[ActionType.add_layer]					= handleAction_addLayer;
+action_map[ActionType.set_layer_property]		= (action) => { setLayerProperty(action.layer_property, action.layers, action.value); }
+action_map[ActionType.set_editing_layers]			= handleAction_setEditingLayers;
+
+// --------------------------------------------------------------------
+function dispatchAction(action)
+{
+	console.log(action_log_channel, "dispatchAction()"); 
+	console.log(action_log_channel, action);
+
+	if (action_map.hasOwnProperty(action.action_type))
 	{
-		var action_handler = layersMenu_actionMap[action.type];
+		var action_handler = action_map[action.action_type];
 
 		action_handler(action);
 	}
 	else
 	{
-		console.log(layers_menu_log_channel, `ERROR: action type ${action.type} not mapped to handler`);
+		console.log(action_log_channel, `ERROR: action type ${action.action_type} not mapped to handler`);
 	}
 }
 
@@ -447,56 +336,57 @@ $(document).ready( function()
 	fractala = new Fractala.Fractala();
 	fractala_svg_renderer = new FractalaSVGRenderer.FractalaSVGRenderer(fractala, {width:view_width, height:view_width});
 
-    // --- DUCTWORK ---
+	 // --- DUCTWORK ---
+	 // TODO: move editor elements to their own class/component
     // num circles
     let numSpokesRangeCallback = myRangeInput.createRange({id:'numSpokesId',
         containerId:'numSpokesRangeContainer',
-        onInputHandler:number_of_spokes.set,
+        onInputHandler:(value) => { 
+			  dispatchAction(new Action(ActionType.set_layer_property, [layer_menu.editing_layer], {value:value, layer_property:"number_of_spokes"}));
+			}, 
 		  initialValue:0, //default_number_of_spokes,
 		  wheelStep:1,
         min:1, max:100, step:1})
 
-    number_of_spokes.addSetCallback(numSpokesRangeCallback);
-
-    // spoke length
+	 // spoke length
     let spokeLengthRangeCallback = myRangeInput.createRange({id:'spokeLengthId',
         containerId:'spokeLengthRangeContainer',
-        onInputHandler:spoke_length.set,
+        onInputHandler:(value) => {
+			dispatchAction(new Action(ActionType.set_layer_property, [layer_menu.editing_layer], {value:value, layer_property:"spoke_length"}));
+		  },
 		  initialValue:0, //default_spoke_length,
 		  wheelStep:1,
         min:0, max:500, step:1})
 
-    spoke_length.addSetCallback(spokeLengthRangeCallback);
-
-    // spoke rot offset
+    // spoke_rot_offset
     let spokeRotOffsetRangeCallback = myRangeInput.createRange({id:'spokeRotOffsetId',
         containerId:'spokeRotOffsetRangeContainer', 
-        onInputHandler:spoke_rot_offset.set,
-        initialValue:0, //default_spoke_rot_offset,
+        onInputHandler:(value) => {
+			dispatchAction(new Action(ActionType.set_layer_property, [layer_menu.editing_layer], {value:value, layer_property:"spoke_rot_offset"}));
+		  },
+		  initialValue:0, //default_spoke_rot_offset,
 		  wheelStep:my2d.TWO_PI / 360,
         min:0, max:my2d.TWO_PI, step:0.01})
 
-    spoke_rot_offset.addSetCallback(spokeRotOffsetRangeCallback);
-
-    // circle radius
+    // radius
     let circleRadiusRangeCallback = myRangeInput.createRange({id:'circleRadiusId',
         containerId:'circleRadiusRangeContainer',
-        onInputHandler:circle_radius.set,
+        onInputHandler:(value) => {
+			dispatchAction(new Action(ActionType.set_layer_property, [layer_menu.editing_layer], {value:value, layer_property:"radius"}));
+		  },
         initialValue:0, //default_circle_radius,
 		  wheelStep:1,
         min:5, max:500, step:1})
 
-    circle_radius.addSetCallback(circleRadiusRangeCallback);
-
-    // stroke width
+    // stroke_width
     let strokeWidthRangeCallback = myRangeInput.createRange({id:'strokeWidthId',
         containerId:'strokeWidthRangeContainer',
-        onInputHandler:stroke_width.set,
-        initialValue:0, //default_stroke_width,
+        onInputHandler:(value) => {
+			dispatchAction(new Action(ActionType.set_layer_property, [layer_menu.editing_layer], {value:value, layer_property:"stroke_width"}));
+		  },
+		  initialValue:0, //default_stroke_width,
 		  wheelStep:1,
         min:1, max:20, step:1})
-
-	 stroke_width.addSetCallback(strokeWidthRangeCallback);
 	 
 	// --- UI INIT ---
 	color_picker = new fncColorPicker.Create({color_picked_handler:onColorPicked, size:250, container_div_id:"colorpick", hue:current_color.hue, rot_offset:-Math.PI * 0.5});
@@ -513,11 +403,13 @@ $(document).ready( function()
 	// setCurrentLayer(default_layer.name);
 
 	// --- UI INIT ---
-	layer_menu = new LayerMenu(fractala, onLayersMenuAction);
+	layer_menu = new LayerMenu(fractala, dispatchAction);
 	layer_menu.generateMenu();
 	$("body").append(layer_menu.$menu_content);
 
-	var new_layer = on_LayersMenuAddLayer({});
+	var new_layer = handleAction_addLayer({});
+
+	syncRangeInputs();
 
 	render();
 });
@@ -609,6 +501,7 @@ function onAddLayer()
 {
 	var new_layer = addLayer();
 	setCurrentLayer(new_layer.name);
+	syncRangeInputs();
 	render();
 }
 
@@ -625,17 +518,12 @@ function onColorPicked(color)
 
 	current_color.set(color);
 
-	if (current_layer_name !== "")
-	{
-		getCurrentLayer().stroke=getColorString(current_color.get());
-		render();
-	}
+	layer_menu.setEditingLayerColor(getColorString(current_color.get()));
 
-	// fix the layer list item background color
 	var background_color_css = { "background-color":getColorString(current_color.get()) };
-	$(`.layerList_Item[data-layer-name=${current_layer_name}] .layerListItemName`).css(background_color_css);
-
 	$("#colorPickButtonId").css(background_color_css);
+
+	render();
 }
 
 </script>

@@ -30,8 +30,6 @@ var Fractala = {
 	{
 		this.layer_index = Fractala.getNextLayerIndex();
 
-		this.name = `circles_${this.layer_index}`;
-
 		Object.assign(this, Fractala.layer_default_parameters);
 		Object.assign(this, parameters);
 	},
@@ -64,6 +62,8 @@ Fractala.Fractala.prototype.getLayer = function(layer_name)
 Fractala.Fractala.prototype.addCirclesLayer = function(parameters)
 {
 	var new_layer = new Fractala.Layer(parameters);
+
+	new_layer.name = `circles_${new_layer.layer_index}`;
 
 	this.layers[new_layer.name] =new_layer;
 	this.layers_order.push(new_layer.name);

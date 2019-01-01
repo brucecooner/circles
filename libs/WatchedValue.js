@@ -14,14 +14,17 @@ WatchedValue =
       { obj.setterCallbacks.push(addedCallback) }
       obj.addSetCallback = addSetCallback
 
-      function setFunc(newValue)
+      function setFunc(newValue, use_callbacks = true )
       {
          obj.currentValue = newValue
 
-         obj.setterCallbacks.forEach( function(currentCallback)
-         {
-            currentCallback(obj.currentValue)
-         })
+			if ( use_callbacks )
+			{
+				obj.setterCallbacks.forEach( function(currentCallback)
+				{
+					currentCallback(obj.currentValue)
+				})
+			}
       }
       obj.set = setFunc
 
