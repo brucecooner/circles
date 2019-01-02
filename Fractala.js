@@ -12,6 +12,7 @@ var Fractala = {
 		number_of_spokes:6, 
 		spoke_length:50,
 		spoke_rot_offset:0,
+		opacity:1,
 		radius:20,	// todo: layer types (this is circles specific)
 		stroke_width:1,
 		stroke:"hsl(0,100%,50%)",	// default red
@@ -107,9 +108,9 @@ Fractala.Fractala.prototype.deleteLayer = function(layer_name)
 		console.log("fractala", `layer ${layer_name} deleted`);
 		delete this.layers[layer_name];
 		// take out of layers_order
+		var removed = false;
 		for (var delete_index = 0; delete_index < this.layers_order.length; delete_index += 1)
 		{
-			var removed = false;
 			if (this.layers_order[delete_index] == layer_name)
 			{
 				removed = true;
@@ -121,7 +122,7 @@ Fractala.Fractala.prototype.deleteLayer = function(layer_name)
 				}
 				else if (1 == this.layers_order.length)
 				{
-					return_name = this.layers_order[delete_index];
+					return_name = this.layers_order[0];
 				}
 				else
 				{

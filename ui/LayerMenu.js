@@ -151,6 +151,10 @@ class LayerMenu
 		$name_td.css({"background-color":background_color }); // ??
 
 		$name_td.click( (event) => { this.setEditingLayer( layer_name ); } );
+		$name_td.mouseenter( (event) => { 
+			this.queueAction(new Action(ActionType.highlight_layer, [layer_name])); } );
+		$name_td.mouseleave( (event) => { 
+			this.queueAction(new Action(ActionType.highlight_layer, [])); } );
 	
 		var $editing_td = $('<td>_</td>');
 		$editing_td.attr("id", this.row_editing_td_id(layer_name) );
@@ -163,14 +167,7 @@ class LayerMenu
 		// 	highlightLayer("");
 			// $layer_list_row_item.$popup_menu.dismiss();
 		// } );
-	
-		// TODO: send to more mature layer click handler
-		// $layer_list_row_item.click( (event) => 
-		// { 
-		// 	console.log("clicked layer list item"); 
-		// 	setCurrentLayer(layer_name); 
-		// });
-	
+		
 		return $layer_list_row_item;
 	}
 

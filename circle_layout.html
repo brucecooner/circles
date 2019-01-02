@@ -34,7 +34,6 @@ LAYER UI STUFF
 * move layer up/down
 * clone layer?
 * ensure correct sync between render order - layer list order
-* ability to delete last layer?
 
 MODAL NEEDS
 * dismissal callback?
@@ -262,6 +261,7 @@ var ActionType = {
 	set_layer_property:"set_layer_property",
 	set_editing_layers:"set_editing_layers",
 	delete_layer:"delete_layer",
+	highlight_layer:"highlight_layer",
 };
 
 class Action
@@ -375,7 +375,26 @@ function setLayerProperty(property_key, layers, value )
 // --------------------------------------------------------------------
 function handleAction_setEditingLayers(action)
 {
+	console.log(action_log_channel, `setEditingLayers()`);
+	console.log(action_log_channel, action.layers);
+
 	syncRangeInputs();
+}
+
+// --------------------------------------------------------------------
+function handleAction_highlightLayer(action)
+{
+	console.log(action_log_channel, `highlightLayer(${action.layers[0]})`);
+
+	if (action.layers.length == 0)
+	{
+		$("g").attr("opacity", 1);
+	}
+	else
+	{
+		$("g").attr("opacity", 0.25);
+		$(`g[data-layer-name=${action.layers[0]}]`).attr("opacity", 1);
+	}
 }
 
 // --------------------------------------------------------------------
@@ -385,6 +404,7 @@ action_map[ActionType.add_layer]					= handleAction_addLayer;
 action_map[ActionType.set_layer_property]		= (action) => { setLayerProperty(action.layer_property, action.layers, action.value); }
 action_map[ActionType.set_editing_layers]		= handleAction_setEditingLayers;
 action_map[ActionType.delete_layer]				= handleAction_deleteLayer;
+action_map[ActionType.highlight_layer]			= handleAction_highlightLayer;
 
 // --------------------------------------------------------------------
 function dispatchAction(action)

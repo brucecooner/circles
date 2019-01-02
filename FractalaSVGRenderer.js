@@ -39,7 +39,7 @@ FractalaSVGRenderer.FractalaSVGRenderer.prototype.renderLayer = function(layer)
 	var rotate_degrees = layer.spoke_rot_offset * degrees_per_radian;
 	var transform_attribute = `transform="rotate(${rotate_degrees})"`;
 
-	var svg_elem = `<g data-layer-name="${layer.name}" ${transform_attribute}>`;
+	var svg_elem = `<g data-layer-name="${layer.name}" ${transform_attribute} opacity=${layer.opacity}>`;
 
 	var current_center = new fnc2d.Point(0, -layer.spoke_length);
 
