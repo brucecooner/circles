@@ -13,7 +13,7 @@
 	min-width:10%;
 }
 
-.layersMenu_button_add {
+.layersMenu_button {
 	background-color:lightcoral;
 	border-radius:7px;
 	border-width:0px;
@@ -25,12 +25,12 @@
 	border-width:2px; */
 }
 
-.layersMenu_button_add:hover {
+.layersMenu_button:hover {
 	background-color:red;
 }
 
-.layersMenu_button_add:hover::after {
-	content:" add";
+body[data-layer-count="0"] #layersMenu_button_delete_id {
+	display:none;
 }
 
 .layersMenu_div .layers_table {

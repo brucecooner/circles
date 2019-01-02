@@ -17,9 +17,13 @@ class LayerMenu
 	// container div
 	get container_div_id()		{ return `${this.attribute_prefix}_div_id`; };
 	get container_div_class()	{ return `${this.attribute_prefix}_div`; };
+	// buttons in general
+	get button_class()			{ return `${this.attribute_prefix}_button`};
 	// add button
-	get add_button_class()		{ return `${this.attribute_prefix}_button_add`; };
+	get add_button_class()		{ return `${this.button_class}_add`; };
 	get add_button_id()			{ return `${this.add_button_class}_id`; };
+	get delete_button_class()	{ return `${this.button_class}_delete`};
+	get delete_button_id()		{ return `${this.delete_button_class}_id`};
 	// table
 	get table_class()				{ return `${this.attribute_prefix}_table`; };
 	get table_id()					{ return `${this.table_class}_id`; };
@@ -33,15 +37,17 @@ class LayerMenu
 
 	// --- menu action types ---
 	// TODO: use ActionTypes (need external def tho)
-	get action_add_layer()		{ return "add_layer"};
+	get actiontype_add_layer()				{ return "add_layer"};
+	get actiontype_set_editing_layers()	{ return "set_editing_layers"; };
+	get actiontype_delete_layer()			{ return "delete_layer"};
 	
 	// -------------------------------------------------------------------------
-	constructor(fractala, menu_action_callback)
+	constructor(fractala, queueAction)
 	{
 		console.log(this.log_channel, "constructor");
 
 		this.fractala = fractala;
-		this.menu_action_callback = menu_action_callback;
+		this.queueAction = queueAction;
 
 		this.name = "LayerMenuClass";
 
@@ -73,31 +79,27 @@ class LayerMenu
 		$(`#${this.row_id(this.editing_layer)}`).attr( "data-editing-layer", true);
 
 		// TODO:use action defs!
-		this.dispatchAction("set_editing_layers");
+		this.sendAction(this.actiontype_set_editing_layers);
 	}
 
 	// -------------------------------------------------------------------------
-	dispatchAction(action_type)
+	sendAction(action_type)
 	{
+		console.log(this.log_channel, `sendAction(${action_type})`)
 		// TODO: need that action class
 		var action = {};
-
 		action.action_type = action_type;
-
 		action.layers = [this.editing_layer];
 
-		this.menu_action_callback(action);
+		this.queueAction(action);
 	};
 
 	// -------------------------------------------------------------------------
-	onAddButtonClick(event)
+	removeLayer(layer_name)
 	{
-		event.stopPropagation();
-
-		console.log(this.log_channel, "add button clicked");
-
-		this.dispatchAction(this.action_add_layer);
-	};
+		$(`#${this.row_id(layer_name)}`).remove();
+		//TODO: re-assign editing layer!
+	}
 
 	// -------------------------------------------------------------------------
 	generateMenu()
@@ -110,15 +112,21 @@ class LayerMenu
 
 		// TODO: use a glyph here?
 		this.$add_button = $('<button>+</button>');
-		this.$add_button.addClass( this.add_button_class);
+		this.$add_button.addClass( `${this.button_class} ${this.add_button_class}`);
 		this.$add_button.attr({ "id":this.add_button_id });
-		this.$add_button.click( (event) => {this.onAddButtonClick(event); } );
+		this.$add_button.click( (event) => {this.sendAction(this.actiontype_add_layer); } );
+
+		this.$delete_button = $('<button>X</button>');
+		this.$delete_button.attr("id", this.delete_button_id)
+		this.$delete_button.addClass(`${this.button_class} ${this.delete_button_class}`);
+		this.$delete_button.click( (event) => {this.sendAction(this.actiontype_delete_layer); } );
 
 		this.$table = $('<table></table>');
 		this.$table.attr({ "id":this.table_id});
 		this.$table.addClass(this.table_class );
 
 		this.$container_div.append(this.$add_button);
+		this.$container_div.append(this.$delete_button);
 		this.$container_div.append(this.$table);
 
 		this.$menu_content = this.$container_div;
