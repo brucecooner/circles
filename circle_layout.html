@@ -7,7 +7,6 @@
 TODO:
 SOON...
 * fill colors
-* layer highlight is broken
 * clear all button?
 * all around better color handling
 * better defaults mgmt/surfacing?
@@ -22,15 +21,20 @@ SOON...
 * remove/delete layer
 * configurable layer names
 	-will users even care about layer names?
+	-is there some other way to 'name' layers?
 * dismissable editor
 * the stroke/color thing is getting confusing, sort out
+
+* Fractala
+* render order iterator
+
+* STATE STORAGE? GOOD ONE!
 
 * dedicated layer edit component
 
 LAYER UI STUFF
 * expandable layer menu?
 * layer visibility (control alpha probably)
-* way to highlight layer?
 * move layer up/down
 * clone layer?
 * ensure correct sync between render order - layer list order
@@ -157,7 +161,9 @@ var view_height;
 
 var layer_menu = null;
 
-var highlighted_layer = "";
+// var highlighted_layer = "";
+
+const storage_key_fractala = "fractala";
 
 // ---- COLOR ----
 // var current_color = { hue:0, saturation:100, lightness:50 };
@@ -262,6 +268,8 @@ var ActionType = {
 	set_editing_layers:"set_editing_layers",
 	delete_layer:"delete_layer",
 	highlight_layer:"highlight_layer",
+	save:"save",
+	restore:"restore",
 };
 
 class Action
@@ -398,6 +406,38 @@ function handleAction_highlightLayer(action)
 }
 
 // --------------------------------------------------------------------
+function handleAction_save(action)
+{
+	var fractala_json = fractala.toJSON();
+	localStorage.setItem(storage_key_fractala, fractala_json);
+}
+
+// --------------------------------------------------------------------
+function handleAction_restore(action)
+{	
+	var fractala_json = localStorage.getItem(storage_key_fractala);
+
+	if (null === fractala_json)
+	{
+		console.log(action_log_channel, `ERROR: no fractala object in localStorage`);
+	}
+	else
+	{
+		var fractala_obj = JSON.parse(fractala_json);
+		fractala.fromJSON(fractala_obj);
+		if (fractala.getLayerCount() > 0 )
+		{
+			layer_menu.sync();
+			var layer = fractala.getLayerByIndex(0);
+			layer_menu.setEditingLayer(layer.name);
+		}
+		$("body").attr("data-layer-count", fractala.getLayerCount());
+
+		render();
+	}
+}
+
+// --------------------------------------------------------------------
 var action_map = {};
 
 action_map[ActionType.add_layer]					= handleAction_addLayer;
@@ -405,6 +445,8 @@ action_map[ActionType.set_layer_property]		= (action) => { setLayerProperty(acti
 action_map[ActionType.set_editing_layers]		= handleAction_setEditingLayers;
 action_map[ActionType.delete_layer]				= handleAction_deleteLayer;
 action_map[ActionType.highlight_layer]			= handleAction_highlightLayer;
+action_map[ActionType.save]						= handleAction_save;
+action_map[ActionType.restore]					= handleAction_restore;
 
 // --------------------------------------------------------------------
 function dispatchAction(action)
@@ -430,7 +472,7 @@ function dispatchAction(action)
 $(document).ready( function()
 {
 	// ---- DATA INIT ----
-	fractala = new Fractala.Fractala();
+	fractala = new Fractala();
 	fractala_svg_renderer = new FractalaSVGRenderer.FractalaSVGRenderer(fractala, {width:view_width, height:view_width});
 
 	 // --- DUCTWORK ---
@@ -494,17 +536,24 @@ $(document).ready( function()
 	 // TODO: make function
 	 $("#colorPickButtonId").css("background-color", getColorString(current_color.get()));
 
-	// default the model
-	// var default_layer = addLayer();
-	// current_layer_name = default_layer.name;
-	// setCurrentLayer(default_layer.name);
 
 	// --- UI INIT ---
 	layer_menu = new LayerMenu(fractala, queueAction);
 	layer_menu.generateMenu();
 	$("body").append(layer_menu.$menu_content);
 
-	var new_layer = handleAction_addLayer({});
+	// var new_layer = handleAction_addLayer({});
+	// restore?
+	var fractala_json = localStorage.getItem(storage_key_fractala);
+	if (null !== fractala_json)
+	{
+		queueAction(new Action(ActionType.restore, []));
+	}
+	else
+	{
+		$("#restoreButtonId").prop("disabled", true);
+		queueAction(new Action(ActionType.add_layer, []));
+	}
 
 	syncRangeInputs();
 
@@ -581,7 +630,22 @@ var svg_blob_url = null;
 var svg_file_version = 1;
 
 // ----------------------------------------------------------------------------
+// save state in local storage
 function onSave()
+{
+	console.log(main_log_channel, "onSave()");
+	queueAction(new Action(ActionType.save, []));
+}
+
+// ----------------------------------------------------------------------------
+function onRestore()
+{
+	console.log(main_log_channel, "onRestore()");
+	queueAction(new Action(ActionType.restore, []));
+}
+
+// ----------------------------------------------------------------------------
+function onDownload()
 {
 	// TODO: move to function?
 	if (svg_blob_url)
@@ -640,6 +704,8 @@ function onColorPicked(color)
 	</table>
 	 <button id="colorPickButtonId" onclick="onPickColor()">xxx</button>
 	 <button onclick="onSave()">save</button>
+	 <button id="restoreButtonId" onclick="onRestore()">restore</button>
+	 <button onclick="onDownload()">download</button>
 </div>
 
 
@@ -650,14 +716,6 @@ function onColorPicked(color)
 <line x1="-100" y1="0" x2="100" y2="0" style="stroke:rgb(0,0,0);stroke-width:2" />
 <line x1="-0" y1="-100" x2="0" y2="100" style="stroke:rgb(0,0,0);stroke-width:2" />
 -->
-
-<!--
-<line x1="10" y1="10" x2="100" y2="10" style="stroke:rgb(255,0,0);stroke-width:2" />
-<line x1="100" y1="10" x2="100" y2="100" style="stroke:rgb(0,255,0);stroke-width:2" />
-<line x1="100" y1="100" x2="10" y2="100" style="stroke:rgb(0,0,255);stroke-width:2" />
-<line x1="10" y1="100" x2="10" y2="10" style="stroke:rgb(0,255,255);stroke-width:2" />
--->
-
 <!-- </g> -->
 <!-- </svg> -->
 

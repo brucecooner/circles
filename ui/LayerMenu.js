@@ -172,6 +172,24 @@ class LayerMenu
 	}
 
 	// -------------------------------------------------------------------------
+	// recreates menu from model
+	sync()
+	{
+		// $(`#${this.container_div_id}`).remove();
+		// this.generateMenu();
+		$(`#${this.table_id}`).empty();
+
+		// since addLayer() PREpends new layers, if we go over layers_order
+		// in order this will show the correct sequence
+		// TODO: Really need to sort this ordering guarantee thing out.
+		for (var index = 0; index < this.fractala.layers_order.length; index += 1)
+		{
+			var layer = this.fractala.getLayerByIndex(index);
+			this.addLayer(layer.name);
+		}
+	}
+
+	// -------------------------------------------------------------------------
 	// Assumptions:
 	//	* layer_name already created
 	addLayer(layer_name)
