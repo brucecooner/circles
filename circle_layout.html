@@ -6,6 +6,7 @@
 <!--
 TODO:
 SOON...
+* globals into a scope (editor maybe?)
 * fill colors
 * clear all button?
 * all around better color handling
@@ -18,7 +19,6 @@ SOON...
 * styles to dedicated css
 * color picker?
 	- better placement, feedback?
-* remove/delete layer
 * configurable layer names
 	-will users even care about layer names?
 	-is there some other way to 'name' layers?
@@ -26,36 +26,32 @@ SOON...
 * the stroke/color thing is getting confusing, sort out
 
 * Fractala
-* render order iterator
-
-* STATE STORAGE? GOOD ONE!
+* render order iterator?
+* Layer class?
+* REALLY need hidden UUID for layer keys instead of relying on name
+* some sort of mirror thing?
 
 * dedicated layer edit component
 
 LAYER UI STUFF
 * expandable layer menu?
 * layer visibility (control alpha probably)
+* ensure correct sync between render order - layer list order
 * move layer up/down
 * clone layer?
-* ensure correct sync between render order - layer list order
 
 MODAL NEEDS
 * dismissal callback?
 
 LESS SOON...
-* multiple stages
-	-define "stage"
-	-stage renderer?
+* undo?
 * svg features support
 	- lines
 	- layers
 * window resize handling (is ok for now)
 
 LATER...
-*	layers?
-* stage "component"
-	-accordions?
-	-re-arrangeable?
+
 WAY LATER...
 * animation
 -->
@@ -126,6 +122,7 @@ body[data-layer-count="0"] #menuBarId {
 
 <script type="application/javascript" src="Fractala.js"></script>
 <script type="application/javascript" src="FractalaSVGRenderer.js"></script>
+<script type="application/javascript" src="Action.js"></script>
 
 <!-- DATA -->
 <!-- <script type="application/javascript" src="layers.js"></script> -->
@@ -143,9 +140,10 @@ body[data-layer-count="0"] #menuBarId {
 
 // ----- EARLY INITS -----
 LogChannels.CaptureConsoleLog();
-
 // LogChannels.EnableChannel(popupper_channel_name, false);
 LogChannels.EnableChannel(LayerMenu.log_channel, true);
+
+var Actions = ActionInit();
 
 // ----- GLOBALS -----
 var main_log_channel = "main";
@@ -160,8 +158,6 @@ var view_width;
 var view_height;
 
 var layer_menu = null;
-
-// var highlighted_layer = "";
 
 const storage_key_fractala = "fractala";
 
@@ -258,75 +254,10 @@ function highlightLayer(layer_name)
 	}
 }
 
-// --- ACTION HANDLERS ---
-// TODO: own file ?
-
-// ============================================================================
-var ActionType = {
-	add_layer:"add_layer" ,
-	set_layer_property:"set_layer_property",
-	set_editing_layers:"set_editing_layers",
-	delete_layer:"delete_layer",
-	highlight_layer:"highlight_layer",
-	save:"save",
-	restore:"restore",
-};
-
-class Action
-{
-	// -------------------------------------------------------------------------
-	// receives:
-	//		-action_type:string
-	//		-layers:[string,...]
-	//		-parameters:{layer_property:string, value:any}
-	constructor(action_type, layers, parameters)
-	{
-		this.action_type = action_type;
-		this.layers = layers;
-
-		Object.assign(this, parameters);
-	}
-};
-
-// -------------------------------------------------------------------------
-// -------------------------------------------------------------------------
-var action_log_channel = "action_handlers";
-
-// ACTION QUEUE
-// [ Action,...]
-var actions_queue = [];
-var processing_queue = false;
-function processActionQueue()
-{
-	console.log(action_log_channel, "begin processing queue");
-	processing_queue = true;
-	while (actions_queue.length > 0)
-	{
-		// pull first action...
-		var current_action = actions_queue[0];
-		actions_queue.splice(0,1);
-		dispatchAction(current_action);
-	}
-	processing_queue = false;
-	console.log(action_log_channel, "done processing queue");
-}
-
-// --------------------------------------------------------------------
-function queueAction(action)
-{
-	actions_queue.push(action);
-
-	// begin, if not already processing
-	if (!processing_queue)
-	{
-		processActionQueue();
-	}
-}
-
 // --------------------------------------------------------------------
 function handleAction_addLayer(action)
 {
-	console.log(action_log_channel, "handleAction_addLayer()"); 
+	console.log(main_log_channel, "handleAction_addLayer()"); 
 
 	// model
 	var new_layer = fractala.addCirclesLayer({stroke:getColorString(current_color.get())});
@@ -346,7 +277,7 @@ function handleAction_addLayer(action)
 // --------------------------------------------------------------------
 function handleAction_deleteLayer(action)
 {
-	console.log(action_log_channel, `handleAction_deleteLayer()`);
+	console.log(main_log_channel, `handleAction_deleteLayer()`);
 
 	// model
 	new_edit_layer_name = fractala.deleteLayer(action.layers[0]);
@@ -372,7 +303,7 @@ function handleAction_deleteLayer(action)
 // --------------------------------------------------------------------
 function setLayerProperty(property_key, layers, value )
 {
-	console.log(action_log_channel, `setLayerProp(${layers[0]}, ${value})`);
+	console.log(main_log_channel, `setLayerProp(${layers[0]}, ${value})`);
 
 	// model
 	fractala.getLayer(layers[0])[property_key] = value;
@@ -383,8 +314,8 @@ function setLayerProperty(property_key, layers, value )
 // --------------------------------------------------------------------
 function handleAction_setEditingLayers(action)
 {
-	console.log(action_log_channel, `setEditingLayers()`);
-	console.log(action_log_channel, action.layers);
+	console.log(main_log_channel, `setEditingLayers()`);
+	console.log(main_log_channel, action.layers);
 
 	syncRangeInputs();
 }
@@ -392,7 +323,7 @@ function handleAction_setEditingLayers(action)
 // --------------------------------------------------------------------
 function handleAction_highlightLayer(action)
 {
-	console.log(action_log_channel, `highlightLayer(${action.layers[0]})`);
+	console.log(main_log_channel, `highlightLayer(${action.layers[0]})`);
 
 	if (action.layers.length == 0)
 	{
@@ -408,6 +339,8 @@ function handleAction_highlightLayer(action)
 // --------------------------------------------------------------------
 function handleAction_save(action)
 {
+	console.log(main_log_channel, `save()`);
+
 	var fractala_json = fractala.toJSON();
 	localStorage.setItem(storage_key_fractala, fractala_json);
 }
@@ -415,6 +348,8 @@ function handleAction_save(action)
 // --------------------------------------------------------------------
 function handleAction_restore(action)
 {	
+	console.log(main_log_channel, `restore()`);
+
 	var fractala_json = localStorage.getItem(storage_key_fractala);
 
 	if (null === fractala_json)
@@ -440,31 +375,15 @@ function handleAction_restore(action)
 // --------------------------------------------------------------------
 var action_map = {};
 
-action_map[ActionType.add_layer]					= handleAction_addLayer;
-action_map[ActionType.set_layer_property]		= (action) => { setLayerProperty(action.layer_property, action.layers, action.value); }
-action_map[ActionType.set_editing_layers]		= handleAction_setEditingLayers;
-action_map[ActionType.delete_layer]				= handleAction_deleteLayer;
-action_map[ActionType.highlight_layer]			= handleAction_highlightLayer;
-action_map[ActionType.save]						= handleAction_save;
-action_map[ActionType.restore]					= handleAction_restore;
+action_map[Actions.ActionType.add_layer]					= handleAction_addLayer;
+action_map[Actions.ActionType.set_layer_property]		= (action) => { setLayerProperty(action.layer_property, action.layers, action.value); }
+action_map[Actions.ActionType.set_editing_layers]		= handleAction_setEditingLayers;
+action_map[Actions.ActionType.delete_layer]				= handleAction_deleteLayer;
+action_map[Actions.ActionType.highlight_layer]			= handleAction_highlightLayer;
+action_map[Actions.ActionType.save]							= handleAction_save;
+action_map[Actions.ActionType.restore]						= handleAction_restore;
 
-// --------------------------------------------------------------------
-function dispatchAction(action)
-{
-	console.log(action_log_channel, "dispatchAction()"); 
-	console.log(action_log_channel, action);
-
-	if (action_map.hasOwnProperty(action.action_type))
-	{
-		var action_handler = action_map[action.action_type];
-
-		action_handler(action);
-	}
-	else
-	{
-		console.log(action_log_channel, `ERROR: action type ${action.action_type} not mapped to handler`);
-	}
-}
+Actions.setConfig({action_map:action_map});
 
 // --------------------------------------------------------------------
 // --------------------------------------------------------------------
@@ -481,7 +400,9 @@ $(document).ready( function()
     let numSpokesRangeCallback = myRangeInput.createRange({id:'numSpokesId',
         containerId:'numSpokesRangeContainer',
         onInputHandler:(value) => { 
-			  queueAction(new Action(ActionType.set_layer_property, [layer_menu.editing_layer], {value:value, layer_property:"number_of_spokes"}));
+			  Actions.queueAction(new Actions.Action(	Actions.ActionType.set_layer_property,
+																	  [layer_menu.editing_layer],
+																	  {value:value, layer_property:"number_of_spokes"}));
 			}, 
 		  initialValue:0, //default_number_of_spokes,
 		  wheelStep:1,
@@ -491,7 +412,9 @@ $(document).ready( function()
     let spokeLengthRangeCallback = myRangeInput.createRange({id:'spokeLengthId',
         containerId:'spokeLengthRangeContainer',
         onInputHandler:(value) => {
-			queueAction(new Action(ActionType.set_layer_property, [layer_menu.editing_layer], {value:value, layer_property:"spoke_length"}));
+			Actions.queueAction(new Actions.Action(	Actions.ActionType.set_layer_property,
+																	[layer_menu.editing_layer],
+																	{value:value, layer_property:"spoke_length"}));
 		  },
 		  initialValue:0, //default_spoke_length,
 		  wheelStep:1,
@@ -501,7 +424,9 @@ $(document).ready( function()
     let spokeRotOffsetRangeCallback = myRangeInput.createRange({id:'spokeRotOffsetId',
         containerId:'spokeRotOffsetRangeContainer', 
         onInputHandler:(value) => {
-			queueAction(new Action(ActionType.set_layer_property, [layer_menu.editing_layer], {value:value, layer_property:"spoke_rot_offset"}));
+			Actions.queueAction(new Actions.Action(	Actions.ActionType.set_layer_property,
+																	[layer_menu.editing_layer], 
+																	{value:value, layer_property:"spoke_rot_offset"}));
 		  },
 		  initialValue:0, //default_spoke_rot_offset,
 		  wheelStep:my2d.TWO_PI / 360,
@@ -511,7 +436,9 @@ $(document).ready( function()
     let circleRadiusRangeCallback = myRangeInput.createRange({id:'circleRadiusId',
         containerId:'circleRadiusRangeContainer',
         onInputHandler:(value) => {
-			queueAction(new Action(ActionType.set_layer_property, [layer_menu.editing_layer], {value:value, layer_property:"radius"}));
+			Actions.queueAction(new Actions.Action(	Actions.ActionType.set_layer_property,
+																	[layer_menu.editing_layer], 
+																	{value:value, layer_property:"radius"}));
 		  },
         initialValue:0, //default_circle_radius,
 		  wheelStep:1,
@@ -521,7 +448,9 @@ $(document).ready( function()
     let strokeWidthRangeCallback = myRangeInput.createRange({id:'strokeWidthId',
         containerId:'strokeWidthRangeContainer',
         onInputHandler:(value) => {
-			queueAction(new Action(ActionType.set_layer_property, [layer_menu.editing_layer], {value:value, layer_property:"stroke_width"}));
+			Actions.queueAction(new Actions.Action(	Actions.ActionType.set_layer_property,
+																	[layer_menu.editing_layer],
+																	{value:value, layer_property:"stroke_width"}));
 		  },
 		  initialValue:0, //default_stroke_width,
 		  wheelStep:1,
@@ -538,7 +467,7 @@ $(document).ready( function()
 
 
 	// --- UI INIT ---
-	layer_menu = new LayerMenu(fractala, queueAction);
+	layer_menu = new LayerMenu(fractala, Actions);
 	layer_menu.generateMenu();
 	$("body").append(layer_menu.$menu_content);
 
@@ -547,12 +476,12 @@ $(document).ready( function()
 	var fractala_json = localStorage.getItem(storage_key_fractala);
 	if (null !== fractala_json)
 	{
-		queueAction(new Action(ActionType.restore, []));
+		Actions.queueAction(new Actions.Action(Actions.ActionType.restore, []));
 	}
 	else
 	{
 		$("#restoreButtonId").prop("disabled", true);
-		queueAction(new Action(ActionType.add_layer, []));
+		Actions.queueAction(new Actions.Action(Actions.ActionType.add_layer, []));
 	}
 
 	syncRangeInputs();
@@ -634,14 +563,14 @@ var svg_file_version = 1;
 function onSave()
 {
 	console.log(main_log_channel, "onSave()");
-	queueAction(new Action(ActionType.save, []));
+	Actions.queueAction(new Actions.Action(Actions.ActionType.save, []));
 }
 
 // ----------------------------------------------------------------------------
 function onRestore()
 {
 	console.log(main_log_channel, "onRestore()");
-	queueAction(new Action(ActionType.restore, []));
+	Actions.queueAction(new Actions.Action(Actions.ActionType.restore, []));
 }
 
 // ----------------------------------------------------------------------------

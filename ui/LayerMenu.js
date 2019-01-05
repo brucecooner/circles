@@ -37,17 +37,18 @@ class LayerMenu
 
 	// --- menu action types ---
 	// TODO: use ActionTypes (need external def tho)
-	get actiontype_add_layer()				{ return "add_layer"};
-	get actiontype_set_editing_layers()	{ return "set_editing_layers"; };
-	get actiontype_delete_layer()			{ return "delete_layer"};
+	// get actiontype_add_layer()				{ return "add_layer"};
+	// get actiontype_set_editing_layers()	{ return "set_editing_layers"; };
+	// get actiontype_delete_layer()			{ return "delete_layer"};
 	
 	// -------------------------------------------------------------------------
-	constructor(fractala, queueAction)
+	constructor(fractala, Actions)
 	{
 		console.log(this.log_channel, "constructor");
 
 		this.fractala = fractala;
-		this.queueAction = queueAction;
+		// this.queueAction = queueAction;
+		this.Actions = Actions;
 
 		this.name = "LayerMenuClass";
 
@@ -73,13 +74,13 @@ class LayerMenu
 		console.log(this.log_channel, `setEditingLayer: ${layer_name}`);
 
 		this.editing_layer = layer_name;
-		console.log(this.editing_layer);
+		// console.log(this.editing_layer);
 
 		$(`.${this.row_class}`).attr("data-editing-layer", false);
 		$(`#${this.row_id(this.editing_layer)}`).attr( "data-editing-layer", true);
 
 		// TODO:use action defs!
-		this.sendAction(this.actiontype_set_editing_layers);
+		this.sendAction(Actions.ActionType.set_editing_layers);
 	}
 
 	// -------------------------------------------------------------------------
@@ -91,7 +92,8 @@ class LayerMenu
 		action.action_type = action_type;
 		action.layers = [this.editing_layer];
 
-		this.queueAction(action);
+		//this.queueAction(action);
+		this.Actions.queueAction(action);
 	};
 
 	// -------------------------------------------------------------------------
@@ -114,12 +116,12 @@ class LayerMenu
 		this.$add_button = $('<button>+</button>');
 		this.$add_button.addClass( `${this.button_class} ${this.add_button_class}`);
 		this.$add_button.attr({ "id":this.add_button_id });
-		this.$add_button.click( (event) => {this.sendAction(this.actiontype_add_layer); } );
+		this.$add_button.click( (event) => {this.sendAction(Actions.ActionType.add_layer); } );
 
 		this.$delete_button = $('<button>X</button>');
 		this.$delete_button.attr("id", this.delete_button_id)
 		this.$delete_button.addClass(`${this.button_class} ${this.delete_button_class}`);
-		this.$delete_button.click( (event) => {this.sendAction(this.actiontype_delete_layer); } );
+		this.$delete_button.click( (event) => {this.sendAction(Actions.ActionType.delete_layer); } );
 
 		this.$table = $('<table></table>');
 		this.$table.attr({ "id":this.table_id});
@@ -152,9 +154,9 @@ class LayerMenu
 
 		$name_td.click( (event) => { this.setEditingLayer( layer_name ); } );
 		$name_td.mouseenter( (event) => { 
-			this.queueAction(new Action(ActionType.highlight_layer, [layer_name])); } );
+			Actions.queueAction(new Actions.Action(Actions.ActionType.highlight_layer, [layer_name])); } );
 		$name_td.mouseleave( (event) => { 
-			this.queueAction(new Action(ActionType.highlight_layer, [])); } );
+			Actions.queueAction(new Actions.Action(Actions.ActionType.highlight_layer, [])); } );
 	
 		var $editing_td = $('<td>_</td>');
 		$editing_td.attr("id", this.row_editing_td_id(layer_name) );
