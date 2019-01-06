@@ -1,37 +1,37 @@
 <html>
 
 <head>
-<title>fractala</title>
+<title>myndala</title>
 
 <!--
 TODO:
 SOON...
-* globals into a scope (editor maybe?)
-* fill colors
-* clear all button?
-* all around better color handling
+* TESTING???
+* globals into a scope (named editor maybe?)
 * better defaults mgmt/surfacing?
 * split out layer types (eventually)
 * do proper accessors on stuff
-* get jquery 3.3.1
 * separate data func. from interface (working on it)
+	-what's left here?
 * ID EVERYTHING! (working on it)
 * styles to dedicated css
-* color picker?
-	- better placement, feedback?
-* configurable layer names
-	-will users even care about layer names?
-	-is there some other way to 'name' layers?
-* dismissable editor
-* the stroke/color thing is getting confusing, sort out
 
 * Fractala
 * render order iterator?
 * Layer class?
 * REALLY need hidden UUID for layer keys instead of relying on name
-* some sort of mirror thing?
+* mirror mode?
 
+CURRENT LAYER(S?) EDITING
+* dismissable editor
 * dedicated layer edit component
+* the stroke/color thing is getting confusing, sort out
+
+COLORS
+* fill colors
+* all around better color handling
+* color picker?
+	- better placement, feedback?
 
 LAYER UI STUFF
 * expandable layer menu?
@@ -39,6 +39,11 @@ LAYER UI STUFF
 * ensure correct sync between render order - layer list order
 * move layer up/down
 * clone layer?
+* save/restore/download to LAYER menu
+* clear all button? <- this would be "new"
+* configurable layer names
+	-will users even care about layer names?
+	-is there some other way to 'name' layers?
 
 MODAL NEEDS
 * dismissal callback?
@@ -108,7 +113,7 @@ body[data-layer-count="0"] #menuBarId {
 
 </style>
 
-<script type="application/javascript" src="jquery-3.1.1.min.js"></script>
+<script type="application/javascript" src="libs/jquery-3.3.1.js"></script>
 <script type="application/javascript" src="libs/utility.js"></script>
 <script type="application/javascript" src="libs/fnc2d.js"></script>
 <script type="application/javascript" src="libs/my2d.js"></script>
@@ -255,6 +260,18 @@ function highlightLayer(layer_name)
 }
 
 // --------------------------------------------------------------------
+function handleAction_newDocument(action)
+{
+	console.log(main_log_channel, "handleAction_newDocument()"); 
+
+	fractala.deleteAllLayers();
+	layer_menu.sync();
+	
+	Actions.queueAction(new Actions.Action(Actions.ActionType.add_layer, []));
+	Actions.queueAction(new Actions.Action(Actions.ActionType.render, []));
+}
+
+// --------------------------------------------------------------------
 function handleAction_addLayer(action)
 {
 	console.log(main_log_channel, "handleAction_addLayer()"); 
@@ -288,7 +305,7 @@ function handleAction_deleteLayer(action)
 	}
 	else
 	{
-		console.log(action_log_channel, "TODO: handle deletion leaving no layer to select");
+		console.log(main_log_channel, "TODO: handle deletion leaving no layer to select");
 	}
 
 	// interface
@@ -373,6 +390,13 @@ function handleAction_restore(action)
 }
 
 // --------------------------------------------------------------------
+function handleAction_render(action)
+{
+	console.log(main_log_channel, "render()");
+	render();
+}
+
+// --------------------------------------------------------------------
 var action_map = {};
 
 action_map[Actions.ActionType.add_layer]					= handleAction_addLayer;
@@ -382,6 +406,8 @@ action_map[Actions.ActionType.delete_layer]				= handleAction_deleteLayer;
 action_map[Actions.ActionType.highlight_layer]			= handleAction_highlightLayer;
 action_map[Actions.ActionType.save]							= handleAction_save;
 action_map[Actions.ActionType.restore]						= handleAction_restore;
+action_map[Actions.ActionType.new_document]				= handleAction_newDocument;
+action_map[Actions.ActionType.render]						= handleAction_render;
 
 Actions.setConfig({action_map:action_map});
 

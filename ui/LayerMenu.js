@@ -24,6 +24,8 @@ class LayerMenu
 	get add_button_id()			{ return `${this.add_button_class}_id`; };
 	get delete_button_class()	{ return `${this.button_class}_delete`};
 	get delete_button_id()		{ return `${this.delete_button_class}_id`};
+	get new_button_class()		{ return `${this.button_class}_new`};
+	get new_button_id()			{ return `${this.new_button_class}_id`};
 	// table
 	get table_class()				{ return `${this.attribute_prefix}_table`; };
 	get table_id()					{ return `${this.table_class}_id`; };
@@ -123,12 +125,18 @@ class LayerMenu
 		this.$delete_button.addClass(`${this.button_class} ${this.delete_button_class}`);
 		this.$delete_button.click( (event) => {this.sendAction(Actions.ActionType.delete_layer); } );
 
+		this.$new_button = $('<button>N</button>');
+		this.$new_button.attr("id", this.new_button_id)
+		this.$new_button.addClass(`${this.button_class} ${this.new_button_class}`);
+		this.$new_button.click( (event) => {this.sendAction(Actions.ActionType.new_document); } );
+
 		this.$table = $('<table></table>');
 		this.$table.attr({ "id":this.table_id});
 		this.$table.addClass(this.table_class );
 
 		this.$container_div.append(this.$add_button);
 		this.$container_div.append(this.$delete_button);
+		this.$container_div.append(this.$new_button);
 		this.$container_div.append(this.$table);
 
 		this.$menu_content = this.$container_div;

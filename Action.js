@@ -21,6 +21,7 @@ function ActionInit() {
 		highlight_layer:"highlight_layer",
 		save:"save",
 		restore:"restore",
+		new_document:"new_document",
 	};
 
 	// ============================================================================
