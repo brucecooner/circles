@@ -23,9 +23,17 @@ class LayerMenu
 	get add_button_class()		{ return `${this.button_class}_add`; };
 	get add_button_id()			{ return `${this.add_button_class}_id`; };
 	get delete_button_class()	{ return `${this.button_class}_delete`};
-	get delete_button_id()		{ return `${this.delete_button_class}_id`};
-	get new_button_class()		{ return `${this.button_class}_new`};
-	get new_button_id()			{ return `${this.new_button_class}_id`};
+	get delete_button_id()		{ return `${this.delete_button_class}_id`;};
+	get new_button_class()		{ return `${this.button_class}_new`;};
+	get new_button_id()			{ return `${this.new_button_class}_id`;};
+	get clone_button_class()	{ return `${this.button_class}_clone`; };
+	get clone_button_id()		{ return `${this.clone_button_class}_id`; };
+	get save_button_class()		{ return `${this.button_class}_save`; };
+	get save_button_id()			{ return `${this.save_button_class}_id`; };
+	get load_button_class()		{ return `${this.button_class}_load`; };
+	get load_button_id()			{ return `${this.load_button_class}_id`; };
+	get download_button_class(){ return `${this.button_class}_download`; };
+	get download_button_id()	{ return `${this.download_button_class}_id`; };
 	// table
 	get table_class()				{ return `${this.attribute_prefix}_table`; };
 	get table_id()					{ return `${this.table_class}_id`; };
@@ -130,6 +138,21 @@ class LayerMenu
 		this.$new_button.addClass(`${this.button_class} ${this.new_button_class}`);
 		this.$new_button.click( (event) => {this.sendAction(Actions.ActionType.new_document); } );
 
+		this.$clone_button = $('<button>C</button>');
+		this.$clone_button.attr("id", this.clone_button_id)
+		this.$clone_button.addClass(`${this.button_class} ${this.clone_button_class}`);
+		this.$clone_button.click( (event) => {this.sendAction(Actions.ActionType.clone_layer); } );
+
+		this.$save_button = $('<button>save</button>');
+		this.$save_button.attr("id", this.save_button_id)
+		this.$save_button.addClass(`${this.button_class} ${this.save_button_class}`);
+		this.$save_button.click( (event) => {this.sendAction(Actions.ActionType.save); } );
+
+		this.$restore_button = $('<button>restore</button>');
+		this.$restore_button.attr("id", this.restore_button_id)
+		this.$restore_button.addClass(`${this.button_class} ${this.restore_button_class}`);
+		this.$restore_button.click( (event) => {this.sendAction(Actions.ActionType.restore); } );
+
 		this.$table = $('<table></table>');
 		this.$table.attr({ "id":this.table_id});
 		this.$table.addClass(this.table_class );
@@ -137,6 +160,10 @@ class LayerMenu
 		this.$container_div.append(this.$add_button);
 		this.$container_div.append(this.$delete_button);
 		this.$container_div.append(this.$new_button);
+		this.$container_div.append(this.$clone_button);
+		this.$container_div.append('<br>');
+		this.$container_div.append(this.$save_button);
+		this.$container_div.append(this.$restore_button);
 		this.$container_div.append(this.$table);
 
 		this.$menu_content = this.$container_div;

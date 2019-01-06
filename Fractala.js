@@ -5,6 +5,7 @@
 //	* layer management (ordering) internally
 //	* layer types (with common aspects)
 // * layer order iterator?
+//	* proper channel name fergoodnesssake
 class Fractala
 {
 	// --- CONST-ISH ---
@@ -84,13 +85,23 @@ class Fractala
 	};
 
 	// -------------------------------------------------------------------------
-	addCirclesLayer(parameters)
+	// NOTE: does NOT add to layers_order
+	newCirclesLayer(parameters)
 	{
 		var new_layer = this.Layer(parameters);
 
 		new_layer.name = `circles_${new_layer.layer_index}`;
 
 		this.layers[new_layer.name] =new_layer;
+
+		return new_layer;
+	}
+
+	// -------------------------------------------------------------------------
+	addCirclesLayer(parameters)
+	{
+		var new_layer = newCirclesLayer();
+
 		this.layers_order.push(new_layer.name);
 
 		return new_layer;
@@ -151,8 +162,44 @@ class Fractala
 	// ----------------------------------------------------------------------------
 	deleteAllLayers()
 	{
+		console.log("fractala", "deleting all layers");
 		this.layers = {};
 		this.layers_order = [];
+	}
+
+	// ----------------------------------------------------------------------------
+	cloneLayer(layer_name)
+	{
+		console.log("fractala", `cloneLayer(${layer_name})`);
+
+		// note: not added to layers_order
+		var new_layer = this.newCirclesLayer();
+
+		var existing_layer = this.getLayer(layer_name);
+		// use keys of default parameters to tell what to copy out of existing_layer
+		// TODO: this should of course eventually be done by a function in the eventual class layer
+		Object.keys(this.layer_default_parameters).forEach( (current_parameter) =>
+		{
+			new_layer[current_parameter] = existing_layer[current_parameter];
+		});
+
+		// place immediately BEFORE existing layer in render order
+		var existing_layer_index = this.layers_order.indexOf(layer_name);
+
+		if (existing_layer_index >= 0)
+		{
+			// note that new layer goes AFTER cloned layer in array, as greater indices indicate
+			// higher layers
+			this.layers_order.splice(existing_layer_index+1, 0, new_layer.name);
+		}
+		else
+		{
+			this.layers_order.push(new_layer);
+
+			throw `layer ${layer_name} could not be found in layers_order`;
+		}
+
+		return new_layer.name; 
 	}
 
 	// ----------------------------------------------------------------------------

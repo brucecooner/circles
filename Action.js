@@ -22,6 +22,7 @@ function ActionInit() {
 		save:"save",
 		restore:"restore",
 		new_document:"new_document",
+		clone_layer:"clone_layer",
 	};
 
 	// ============================================================================

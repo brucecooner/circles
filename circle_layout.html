@@ -38,9 +38,7 @@ LAYER UI STUFF
 * layer visibility (control alpha probably)
 * ensure correct sync between render order - layer list order
 * move layer up/down
-* clone layer?
 * save/restore/download to LAYER menu
-* clear all button? <- this would be "new"
 * configurable layer names
 	-will users even care about layer names?
 	-is there some other way to 'name' layers?
@@ -266,7 +264,7 @@ function handleAction_newDocument(action)
 
 	fractala.deleteAllLayers();
 	layer_menu.sync();
-	
+
 	Actions.queueAction(new Actions.Action(Actions.ActionType.add_layer, []));
 	Actions.queueAction(new Actions.Action(Actions.ActionType.render, []));
 }
@@ -290,6 +288,18 @@ function handleAction_addLayer(action)
 
 	return new_layer;
 };
+
+// --------------------------------------------------------------------
+function handleAction_cloneLayer(action)
+{
+	console.log(main_log_channel, `handleAction_cloneLayer(${action.layers[0]})`); 
+
+	var new_layer_name = fractala.cloneLayer(action.layers[0]);
+	layer_menu.sync();
+	layer_menu.setEditingLayer(new_layer_name);
+
+	Actions.queueAction(new Actions.Action(Actions.ActionType.render));
+}
 
 // --------------------------------------------------------------------
 function handleAction_deleteLayer(action)
@@ -408,6 +418,7 @@ action_map[Actions.ActionType.save]							= handleAction_save;
 action_map[Actions.ActionType.restore]						= handleAction_restore;
 action_map[Actions.ActionType.new_document]				= handleAction_newDocument;
 action_map[Actions.ActionType.render]						= handleAction_render;
+action_map[Actions.ActionType.clone_layer]				= handleAction_cloneLayer;
 
 Actions.setConfig({action_map:action_map});
 
@@ -658,9 +669,9 @@ function onColorPicked(color)
 		<tr><td>stroke</td><td id="strokeWidthRangeContainer"></td></tr>
 	</table>
 	 <button id="colorPickButtonId" onclick="onPickColor()">xxx</button>
-	 <button onclick="onSave()">save</button>
+	 <!-- <button onclick="onSave()">save</button>
 	 <button id="restoreButtonId" onclick="onRestore()">restore</button>
-	 <button onclick="onDownload()">download</button>
+	 <button onclick="onDownload()">download</button> -->
 </div>
 
 
