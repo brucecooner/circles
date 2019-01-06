@@ -57,6 +57,10 @@ body[data-layer-count="0"] #layersMenu_button_delete_id {
 	/* border:1px solid gray; */
 }
 
+/* .layersMenu_table_row[data-editing-layer="true"] .layersMenu_table_row_td_name {
+	padding:0px 10px 0px 0px;
+} */
+
 .layersMenu_table_row[data-editing-layer=false] .layersMenu_table_row_td_editing {
 	display:none;
 }

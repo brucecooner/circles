@@ -23,6 +23,7 @@ function ActionInit() {
 		restore:"restore",
 		new_document:"new_document",
 		clone_layer:"clone_layer",
+		download:"download",
 	};
 
 	// ============================================================================

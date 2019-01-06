@@ -34,11 +34,11 @@ COLORS
 	- better placement, feedback?
 
 LAYER UI STUFF
+* icons would be nice
 * expandable layer menu?
 * layer visibility (control alpha probably)
 * ensure correct sync between render order - layer list order
 * move layer up/down
-* save/restore/download to LAYER menu
 * configurable layer names
 	-will users even care about layer names?
 	-is there some other way to 'name' layers?
@@ -407,6 +407,18 @@ function handleAction_render(action)
 }
 
 // --------------------------------------------------------------------
+function handleAction_download(action)
+{
+	if (svg_blob_url)
+	{
+		window.URL.revokeObjectURL(svg_blob_url);
+	}
+	svg_blob_url = show_svg();
+
+	save_dialog.start(svg_blob_url);
+}
+
+// --------------------------------------------------------------------
 var action_map = {};
 
 action_map[Actions.ActionType.add_layer]					= handleAction_addLayer;
@@ -419,6 +431,7 @@ action_map[Actions.ActionType.restore]						= handleAction_restore;
 action_map[Actions.ActionType.new_document]				= handleAction_newDocument;
 action_map[Actions.ActionType.render]						= handleAction_render;
 action_map[Actions.ActionType.clone_layer]				= handleAction_cloneLayer;
+action_map[Actions.ActionType.download]					= handleAction_download;
 
 Actions.setConfig({action_map:action_map});
 

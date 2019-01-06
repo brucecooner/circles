@@ -153,6 +153,11 @@ class LayerMenu
 		this.$restore_button.addClass(`${this.button_class} ${this.restore_button_class}`);
 		this.$restore_button.click( (event) => {this.sendAction(Actions.ActionType.restore); } );
 
+		this.$download_button = $('<button>download</button>');
+		this.$download_button.attr("id", this.download_button_id)
+		this.$download_button.addClass(`${this.button_class} ${this.download_button_class}`);
+		this.$download_button.click( (event) => {this.sendAction(Actions.ActionType.download); } );
+
 		this.$table = $('<table></table>');
 		this.$table.attr({ "id":this.table_id});
 		this.$table.addClass(this.table_class );
@@ -164,6 +169,8 @@ class LayerMenu
 		this.$container_div.append('<br>');
 		this.$container_div.append(this.$save_button);
 		this.$container_div.append(this.$restore_button);
+		this.$container_div.append('<br>');
+		this.$container_div.append(this.$download_button);
 		this.$container_div.append(this.$table);
 
 		this.$menu_content = this.$container_div;
@@ -200,11 +207,6 @@ class LayerMenu
 		$layer_list_row_item.append($name_td);
 		$layer_list_row_item.append($editing_td);
 	
-		// $layer_list_row_item.mouseleave( (evt) => {
-		// 	highlightLayer("");
-			// $layer_list_row_item.$popup_menu.dismiss();
-		// } );
-		
 		return $layer_list_row_item;
 	}
 
