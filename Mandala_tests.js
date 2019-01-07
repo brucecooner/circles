@@ -8,34 +8,34 @@
 //		* test removing first layer
 //		* test cloning layer
 //		* test to/from json
-class FractalaTester
+class MandalaTester
 {
-	get log_channel()						{ return "fractala_tests"; };
+	get log_channel()						{ return "mandala_tests"; };
 
 	// -------------------------------------------------------------------------
 	test_Init()
 	{
-		var fractala = new Fractala();
+		var mandala = new Mandala();
 
-		if (fractala.getLayerCount() > 0) {
-			throw "new fractala contained >0 layers";
+		if (mandala.getLayerCount() > 0) {
+			throw "new mandala contained >0 layers";
 		}
-		if (fractala.layers_order.length > 0) {
-			throw "new fractala layers_order.length > 0";
+		if (mandala.layers_order.length > 0) {
+			throw "new mandala layers_order.length > 0";
 		}
 	}
 
 	// -------------------------------------------------------------------------
 	test_addFirstLayer()
 	{
-		var fractala = new Fractala();
+		var mandala = new Mandala();
 
-		var layer_name = fractala.addCirclesLayer();
+		var layer_name = mandala.addCirclesLayer();
 
-		if (fractala.getLayerCount !== 1) {
-			throw "fractala does not have exactly 1 layer";
+		if (mandala.getLayerCount !== 1) {
+			throw "mandala does not have exactly 1 layer";
 		}
-		if (fractala.layers_order.length !== 1) {
+		if (mandala.layers_order.length !== 1) {
 			throw "layers_order.length !== 0";
 		}
 	}
@@ -47,7 +47,7 @@ class FractalaTester
 			"test_Init",
 		];
 
-		this.tester = new MiniTester("Fractala", this, this.test_list );
+		this.tester = new MiniTester("Mandala", this, this.test_list );
 	}
 
 	// -------------------------------------------------------------------------

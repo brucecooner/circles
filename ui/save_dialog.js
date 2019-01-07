@@ -20,7 +20,7 @@ var SaveDialog =
 		this.container_id = "saveFileContainerId";
 		this.anchor_id = "saveFileAnchorId";
 		this.text_input_id = "saveFilenameTextInputId";
-		this.default_savefile_name = "fractala.svg";
+		this.default_savefile_name = "mandala.svg";
 
 		this.$container = $(`<div id="${this.continer_id}" onclick="event.stopPropagation()"></div>`);
 		this.$container.css( {	"position":"absolute",

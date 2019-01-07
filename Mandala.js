@@ -6,7 +6,7 @@
 //	* layer types (with common aspects)
 // * layer order iterator?
 //	* proper channel name fergoodnesssake
-class Fractala
+class Mandala
 {
 	// --- CONST-ISH ---
 	get layer_default_parameters() { return {	number_of_spokes:6, 
@@ -25,7 +25,7 @@ class Fractala
 		this.next_layer_index = 0;
 
 		// --- DEFAULTS ---
-		this.name = "fractala";
+		this.name = "mandala";
 
 		// --- DATA ---
 		this.layers = {};
@@ -74,7 +74,7 @@ class Fractala
 		}
 		else
 		{
-			console.log("fractala", `ERROR: getLayerByIndex() index ${index} out of bounds`);	
+			console.log("mandala", `ERROR: getLayerByIndex() index ${index} out of bounds`);	
 		}
 	};
 
@@ -118,7 +118,7 @@ class Fractala
 
 		if (this.layers.hasOwnProperty(layer_name))
 		{
-			console.log("fractala", `layer ${layer_name} deleted`);
+			console.log("mandala", `layer ${layer_name} deleted`);
 			delete this.layers[layer_name];
 			// take out of layers_order
 			var removed = false;
@@ -148,12 +148,12 @@ class Fractala
 			}
 			if (!removed)
 			{
-				console.log("fractala", `could not find layer ${layer_name} in layers_order`);
+				console.log("mandala", `could not find layer ${layer_name} in layers_order`);
 			}
 		}
 		else
 		{
-			console.log("fractala", `ERROR: layer ${layer_name} not found for deletion`);
+			console.log("mandala", `ERROR: layer ${layer_name} not found for deletion`);
 		}
 
 		return return_name;
@@ -162,7 +162,7 @@ class Fractala
 	// ----------------------------------------------------------------------------
 	deleteAllLayers()
 	{
-		console.log("fractala", "deleting all layers");
+		console.log("mandala", "deleting all layers");
 		this.layers = {};
 		this.layers_order = [];
 	}
@@ -170,7 +170,7 @@ class Fractala
 	// ----------------------------------------------------------------------------
 	cloneLayer(layer_name)
 	{
-		console.log("fractala", `cloneLayer(${layer_name})`);
+		console.log("mandala", `cloneLayer(${layer_name})`);
 
 		// note: not added to layers_order
 		var new_layer = this.newCirclesLayer();
@@ -283,7 +283,7 @@ class Fractala
 	// =========================================================================
 	testIntegrity()
 	{
-		var log_channel = "fractala_integrity";
+		var log_channel = "mandala_integrity";
 
 		var test_list = [
 			"layers_and_layers_order_same_length",
@@ -291,7 +291,7 @@ class Fractala
 			"layers_order_names_are_unique",
 		];
 
-		var integrity_tester = new MiniTester("fractala int chk", this, test_list );
+		var integrity_tester = new MiniTester("mandala int chk", this, test_list );
 
 		var results = integrity_tester.test();
 

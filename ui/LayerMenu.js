@@ -52,11 +52,11 @@ class LayerMenu
 	// get actiontype_delete_layer()			{ return "delete_layer"};
 	
 	// -------------------------------------------------------------------------
-	constructor(fractala, Actions)
+	constructor(mandala, Actions)
 	{
 		console.log(this.log_channel, "constructor");
 
-		this.fractala = fractala;
+		this.mandala = mandala;
 		// this.queueAction = queueAction;
 		this.Actions = Actions;
 
@@ -221,9 +221,9 @@ class LayerMenu
 		// since addLayer() PREpends new layers, if we go over layers_order
 		// in order this will show the correct sequence
 		// TODO: Really need to sort this ordering guarantee thing out.
-		for (var index = 0; index < this.fractala.layers_order.length; index += 1)
+		for (var index = 0; index < this.mandala.layers_order.length; index += 1)
 		{
-			var layer = this.fractala.getLayerByIndex(index);
+			var layer = this.mandala.getLayerByIndex(index);
 			this.addLayer(layer.name);
 		}
 	}
@@ -233,7 +233,7 @@ class LayerMenu
 	//	* layer_name already created
 	addLayer(layer_name)
 	{
-		var layer = fractala.getLayer(layer_name);
+		var layer = mandala.getLayer(layer_name);
 
 		var $row_item = this.generateLayerListItem(layer_name, layer.stroke);
 

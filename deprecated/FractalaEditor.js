@@ -1,5 +1,5 @@
 // ============================================================================
-class FractalaEditor
+class MandalaEditor
 {
 	get log_channel()				{ return "LayerMenu"; };
 
@@ -8,19 +8,19 @@ class FractalaEditor
 	get	action_set_number_of_spokes()	{ return set_number_of_spokes; };
 	
 	// -------------------------------------------------------------------------
-	constructor(fractala)
+	constructor(mandala)
 	{
 		console.log(this.log_channel, "constructor");
 
-		this.fractala = fractala;
+		this.mandala = mandala;
 
-		this.name = "FractalaEditor";
+		this.name = "MandalaEditor";
 	};
 
 	// -------------------------------------------------------------------------
 	handle_addLayer(action)
 	{
-		fractala.addCirclesLayer();
+		mandala.addCirclesLayer();
 	}
 
 	// -------------------------------------------------------------------------

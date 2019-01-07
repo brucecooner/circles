@@ -4,7 +4,7 @@
  * 		seems unnecessary? Can generate spoke points once then clone upon rendering, letting svg transform handle
  * 		the rotation
  */
-function FractalaLayerInit()
+function MandalaLayerInit()
 {
 	class Layer
 	{

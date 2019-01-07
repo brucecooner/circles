@@ -2,19 +2,19 @@
 
 if ( typeof svgee == "undefined")
 {
-	console.log("ERROR: FractalaSVGRenderer needs svgee library.");
+	console.log("ERROR: MandalaSVGRenderer needs svgee library.");
 }
 else
 {
-	var FractalaSVGRenderer = {
+	var MandalaSVGRenderer = {
 
 	// -------------------------------------------------------------------------
 	// config: { width:number, height:number }
 	// svg local x,y will be at upper left corner of viewbox
-	FractalaSVGRenderer:function(fractala, config)
+	MandalaSVGRenderer:function(mandala, config)
 	{
-		this.name = "FractalaSVGRenderer";
-		this.fractala = fractala;
+		this.name = "MandalaSVGRenderer";
+		this.mandala = mandala;
 
 		Object.assign(this, config);
 
@@ -25,7 +25,7 @@ else
 
 // ----------------------------------------------------------------------------
 // adds empty version of rendering related data
-FractalaSVGRenderer.FractalaSVGRenderer.prototype.clear = function()
+MandalaSVGRenderer.MandalaSVGRenderer.prototype.clear = function()
 {
 	this.root_element = "";
 	this.layer_elements = [];
@@ -34,7 +34,7 @@ FractalaSVGRenderer.FractalaSVGRenderer.prototype.clear = function()
 // ----------------------------------------------------------------------------
 // only doin' circles for now
 // TODO: could just clone each spoke, then rotate
-FractalaSVGRenderer.FractalaSVGRenderer.prototype.renderLayer = function(layer)
+MandalaSVGRenderer.MandalaSVGRenderer.prototype.renderLayer = function(layer)
 {
 	const degrees_per_radian = 360.0 / (Math.PI*2);
 	var rotate_degrees = layer.spoke_rot_offset * degrees_per_radian;
@@ -76,7 +76,7 @@ FractalaSVGRenderer.FractalaSVGRenderer.prototype.renderLayer = function(layer)
 
 // ----------------------------------------------------------------------------
 // returns whole enchilada:string
-FractalaSVGRenderer.FractalaSVGRenderer.prototype.render = function()
+MandalaSVGRenderer.MandalaSVGRenderer.prototype.render = function()
 {
 	var width = this.width;
 	var height = this.height;
@@ -88,9 +88,9 @@ FractalaSVGRenderer.FractalaSVGRenderer.prototype.render = function()
 	var svg_elem = `<svg width="100%" height="100%" id="mySVG" viewbox="${x} ${y} ${width} ${height}">`;
 
 	// loop over its layers or, something
-	this.fractala.layers_order.forEach( (current_layer_name) => {
+	this.mandala.layers_order.forEach( (current_layer_name) => {
 
-		var current_element = this.renderLayer(this.fractala.getLayer(current_layer_name));
+		var current_element = this.renderLayer(this.mandala.getLayer(current_layer_name));
 		this.layer_elements.push(current_element);
 
 		svg_elem += current_element;

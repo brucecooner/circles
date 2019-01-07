@@ -19,7 +19,7 @@ SOON...
 * ID EVERYTHING! (working on it)
 * styles to dedicated css
 
-* Fractala
+* Mandala
 * render order iterator?
 * Layer class?
 * REALLY need hidden UUID for layer keys instead of relying on name
@@ -126,9 +126,9 @@ body[data-layer-count="0"] #menuBarId {
 <script type="application/javascript" src="svgee.js"></script>
 <script type="application/javascript" src="fncColorPicker.js"></script>
 
-<script type="application/javascript" src="Fractala.js"></script>
-<script type="application/javascript" src="Fractala_tests.js"></script>
-<script type="application/javascript" src="FractalaSVGRenderer.js"></script>
+<script type="application/javascript" src="Mandala.js"></script>
+<script type="application/javascript" src="Mandala_tests.js"></script>
+<script type="application/javascript" src="MandalaSVGRenderer.js"></script>
 <script type="application/javascript" src="Action.js"></script>
 
 <!-- DATA -->
@@ -157,8 +157,8 @@ LogChannels.EnableChannel(Actions.log_channel, false);
 var main_log_channel = "index";
 var edit_log_channel = "edit";
 
-var fractala = null;
-var fractala_svg_renderer = null;
+var mandala = null;
+var mandala_svg_renderer = null;
 
 var current_layer_name = "";
 
@@ -167,10 +167,10 @@ var view_height;
 
 var layer_menu = null;
 
-const storage_key_fractala = "fractala";
+const storage_key_mandala = "mandala";
 
 // testing stuff
-var fractala_integrity_check_after_queue_processing = true;
+var mandala_integrity_check_after_queue_processing = true;
 
 // ---- COLOR ----
 // var current_color = { hue:0, saturation:100, lightness:50 };
@@ -205,7 +205,7 @@ function syncRangeInputs()
 // ----------------------------------------------------------------------------
 function setCurrentLayer(layer_name)
 {
-	var layer = fractala.getLayer(layer_name);
+	var layer = mandala.getLayer(layer_name);
 
 	$(`.layerList_Item`).attr("data-active-layer", false);
 
@@ -222,7 +222,7 @@ function setCurrentLayer(layer_name)
 // ----------------------------------------------------------------------------
 function getCurrentLayer()
 {
-	return fractala.getLayer(layer_menu.editing_layer);
+	return mandala.getLayer(layer_menu.editing_layer);
 }
 
 // --------------------------------------------------------------------
@@ -270,7 +270,7 @@ function handleAction_newDocument(action)
 {
 	console.log(main_log_channel, "handleAction_newDocument()"); 
 
-	fractala.deleteAllLayers();
+	mandala.deleteAllLayers();
 	layer_menu.sync();
 
 	Actions.queueAction(new Actions.Action(Actions.ActionType.add_layer, []));
@@ -283,14 +283,14 @@ function handleAction_addLayer(action)
 	console.log(main_log_channel, "handleAction_addLayer()"); 
 
 	// model
-	var new_layer = fractala.addCirclesLayer({stroke:getColorString(current_color.get())});
+	var new_layer = mandala.addCirclesLayer({stroke:getColorString(current_color.get())});
 
 	// interface
 	layer_menu.addLayer(new_layer.name);
 	layer_menu.setEditingLayer(new_layer.name);
 
 	// TODO: function...
-	$("body").attr("data-layer-count", fractala.getLayerCount());
+	$("body").attr("data-layer-count", mandala.getLayerCount());
 
 	render();
 
@@ -302,7 +302,7 @@ function handleAction_cloneLayer(action)
 {
 	console.log(main_log_channel, `handleAction_cloneLayer(${action.layers[0]})`); 
 
-	var new_layer_name = fractala.cloneLayer(action.layers[0]);
+	var new_layer_name = mandala.cloneLayer(action.layers[0]);
 	layer_menu.sync();
 	layer_menu.setEditingLayer(new_layer_name);
 
@@ -315,7 +315,7 @@ function handleAction_deleteLayer(action)
 	console.log(main_log_channel, `handleAction_deleteLayer()`);
 
 	// model
-	new_edit_layer_name = fractala.deleteLayer(action.layers[0]);
+	new_edit_layer_name = mandala.deleteLayer(action.layers[0]);
 
 	if (new_edit_layer_name !== "")
 	{
@@ -330,7 +330,7 @@ function handleAction_deleteLayer(action)
 	layer_menu.removeLayer(action.layers[0]);
 
 	// TODO: function...
-	$("body").attr("data-layer-count", fractala.getLayerCount());
+	$("body").attr("data-layer-count", mandala.getLayerCount());
 
 	render();
 }
@@ -341,7 +341,7 @@ function setLayerProperty(property_key, layers, value )
 	console.log(main_log_channel, `setLayerProp(${layers[0]}, ${value})`);
 
 	// model
-	fractala.getLayer(layers[0])[property_key] = value;
+	mandala.getLayer(layers[0])[property_key] = value;
 
 	render();
 };
@@ -376,8 +376,8 @@ function handleAction_save(action)
 {
 	console.log(main_log_channel, `save()`);
 
-	var fractala_json = fractala.toJSON();
-	localStorage.setItem(storage_key_fractala, fractala_json);
+	var mandala_json = mandala.toJSON();
+	localStorage.setItem(storage_key_mandala, mandala_json);
 }
 
 // --------------------------------------------------------------------
@@ -385,23 +385,23 @@ function handleAction_restore(action)
 {	
 	console.log(main_log_channel, `restore()`);
 
-	var fractala_json = localStorage.getItem(storage_key_fractala);
+	var mandala_json = localStorage.getItem(storage_key_mandala);
 
-	if (null === fractala_json)
+	if (null === mandala_json)
 	{
-		console.log(action_log_channel, `ERROR: no fractala object in localStorage`);
+		console.log(action_log_channel, `ERROR: no mandala object in localStorage`);
 	}
 	else
 	{
-		var fractala_obj = JSON.parse(fractala_json);
-		fractala.fromJSON(fractala_obj);
-		if (fractala.getLayerCount() > 0 )
+		var mandala_obj = JSON.parse(mandala_json);
+		mandala.fromJSON(mandala_obj);
+		if (mandala.getLayerCount() > 0 )
 		{
 			layer_menu.sync();
-			var layer = fractala.getLayerByIndex(0);
+			var layer = mandala.getLayerByIndex(0);
 			layer_menu.setEditingLayer(layer.name);
 		}
-		$("body").attr("data-layer-count", fractala.getLayerCount());
+		$("body").attr("data-layer-count", mandala.getLayerCount());
 
 		render();
 	}
@@ -431,9 +431,9 @@ function queue_processing_done_callback()
 {
 	// console.log(main_log_channel, "queue_processing_done_callback()");
 
-	if (fractala_integrity_check_after_queue_processing)
+	if (mandala_integrity_check_after_queue_processing)
 	{
-		fractala.testIntegrity();
+		mandala.testIntegrity();
 	}
 }
 
@@ -460,8 +460,8 @@ Actions.setConfig({action_map:action_map, queue_processing_done_callback:queue_p
 $(document).ready( function()
 {
 	// ---- DATA INIT ----
-	fractala = new Fractala();
-	fractala_svg_renderer = new FractalaSVGRenderer.FractalaSVGRenderer(fractala, {width:view_width, height:view_width});
+	mandala = new Mandala();
+	mandala_svg_renderer = new MandalaSVGRenderer.MandalaSVGRenderer(mandala, {width:view_width, height:view_width});
 
 	 // --- DUCTWORK ---
 	 // TODO: move editor elements to their own class/component
@@ -536,14 +536,14 @@ $(document).ready( function()
 
 
 	// --- UI INIT ---
-	layer_menu = new LayerMenu(fractala, Actions);
+	layer_menu = new LayerMenu(mandala, Actions);
 	layer_menu.generateMenu();
 	$("body").append(layer_menu.$menu_content);
 
 	// var new_layer = handleAction_addLayer({});
 	// restore?
-	var fractala_json = localStorage.getItem(storage_key_fractala);
-	if (null !== fractala_json)
+	var mandala_json = localStorage.getItem(storage_key_mandala);
+	if (null !== mandala_json)
 	{
 		Actions.queueAction(new Actions.Action(Actions.ActionType.restore, []));
 	}
@@ -616,7 +616,7 @@ function render()
     $("#mySVG").remove();
 
    // var svg_elem = generate_svg();
-	var svg_elem = fractala_svg_renderer.render();
+	var svg_elem = mandala_svg_renderer.render();
 
     $("body").append(svg_elem);
 }
