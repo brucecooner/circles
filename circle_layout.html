@@ -20,6 +20,7 @@ SOON...
 * styles to dedicated css
 
 * Mandala
+* from json should probably construct instances?
 * render order iterator?
 * Layer class?
 * REALLY need hidden UUID for layer keys instead of relying on name
@@ -126,6 +127,7 @@ body[data-layer-count="0"] #menuBarId {
 <script type="application/javascript" src="svgee.js"></script>
 <script type="application/javascript" src="fncColorPicker.js"></script>
 
+<script type="application/javascript" src="MandalaLayer.js"></script>
 <script type="application/javascript" src="Mandala.js"></script>
 <script type="application/javascript" src="Mandala_tests.js"></script>
 <script type="application/javascript" src="MandalaSVGRenderer.js"></script>
@@ -460,7 +462,8 @@ Actions.setConfig({action_map:action_map, queue_processing_done_callback:queue_p
 $(document).ready( function()
 {
 	// ---- DATA INIT ----
-	mandala = new Mandala();
+	mandala_layer_class = MandalaLayerInit();
+	mandala = new Mandala(mandala_layer_class);
 	mandala_svg_renderer = new MandalaSVGRenderer.MandalaSVGRenderer(mandala, {width:view_width, height:view_width});
 
 	 // --- DUCTWORK ---

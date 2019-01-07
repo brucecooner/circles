@@ -5,7 +5,7 @@
 //	* layer management (ordering) internally
 //	* layer types (with common aspects)
 // * layer order iterator?
-//	* proper channel name fergoodnesssake
+//	* proper channel names fergoodnesssake
 class Mandala
 {
 	// --- CONST-ISH ---
@@ -19,13 +19,15 @@ class Mandala
 														}; 
 	};
 
-	// -------------------------------------------------------------------------
-	constructor()
-	{
-		this.next_layer_index = 0;
+	get className()					{ return "Mandala"; };
+	get channelName()					{ return "Mandala" };
 
-		// --- DEFAULTS ---
-		this.name = "mandala";
+	// -------------------------------------------------------------------------
+	constructor(LayerClass)
+	{
+		this.LayerClass = LayerClass;
+
+		this.next_layer_index = 0;
 
 		// --- DATA ---
 		this.layers = {};
@@ -46,18 +48,6 @@ class Mandala
 	};
 	
 	// -------------------------------------------------------------------------
-	Layer(parameters)
-	{
-		var layer = {};
-		layer.layer_index = this.getNextLayerIndex();
-
-		Object.assign(layer, this.layer_default_parameters);
-		Object.assign(layer, parameters);
-
-		return layer;
-	};
-
-	// -------------------------------------------------------------------------
 	getLayer(layer_name)
 	{
 		// TODO: handle not having requested layer
@@ -74,7 +64,7 @@ class Mandala
 		}
 		else
 		{
-			console.log("mandala", `ERROR: getLayerByIndex() index ${index} out of bounds`);	
+			console.log(channelName, `ERROR: getLayerByIndex() index ${index} out of bounds`);	
 		}
 	};
 
@@ -88,9 +78,9 @@ class Mandala
 	// NOTE: does NOT add to layers_order
 	newCirclesLayer(parameters)
 	{
-		var new_layer = this.Layer(parameters);
+		var new_layer = new this.LayerClass(parameters);
 
-		new_layer.name = `circles_${new_layer.layer_index}`;
+		new_layer.name = `circles_${this.getNextLayerIndex()}`;
 
 		this.layers[new_layer.name] =new_layer;
 
@@ -118,7 +108,7 @@ class Mandala
 
 		if (this.layers.hasOwnProperty(layer_name))
 		{
-			console.log("mandala", `layer ${layer_name} deleted`);
+			console.log(channelName, `layer ${layer_name} deleted`);
 			delete this.layers[layer_name];
 			// take out of layers_order
 			var removed = false;
@@ -148,12 +138,12 @@ class Mandala
 			}
 			if (!removed)
 			{
-				console.log("mandala", `could not find layer ${layer_name} in layers_order`);
+				console.log(channelName, `could not find layer ${layer_name} in layers_order`);
 			}
 		}
 		else
 		{
-			console.log("mandala", `ERROR: layer ${layer_name} not found for deletion`);
+			console.log(channelName, `ERROR: layer ${layer_name} not found for deletion`);
 		}
 
 		return return_name;
@@ -162,7 +152,7 @@ class Mandala
 	// ----------------------------------------------------------------------------
 	deleteAllLayers()
 	{
-		console.log("mandala", "deleting all layers");
+		console.log(channelName, "deleting all layers");
 		this.layers = {};
 		this.layers_order = [];
 	}
@@ -170,7 +160,7 @@ class Mandala
 	// ----------------------------------------------------------------------------
 	cloneLayer(layer_name)
 	{
-		console.log("mandala", `cloneLayer(${layer_name})`);
+		console.log(channelName, `cloneLayer(${layer_name})`);
 
 		// note: not added to layers_order
 		var new_layer = this.newCirclesLayer();

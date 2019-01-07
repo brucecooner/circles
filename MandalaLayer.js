@@ -8,7 +8,7 @@ function MandalaLayerInit()
 {
 	class Layer
 	{
-		get layer_default_parameters() 
+		get default_parameters() 
 		{ return {	number_of_spokes:6, 
 						spoke_length:50,
 						spoke_rot_offset:0,
@@ -25,10 +25,10 @@ function MandalaLayerInit()
 		// ------------------------------------------------------------
 		constructor(parameters)
 		{
-			Object.assign(layer, this.layer_default_parameters);
-			Object.assign(layer, parameters);
+			Object.assign(this, this.default_parameters);
+			Object.assign(this, parameters);
 		}
 	};
 
-	return { Layer:Layer };
+	return Layer;
 };
