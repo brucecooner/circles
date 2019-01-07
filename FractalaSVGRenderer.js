@@ -33,6 +33,7 @@ FractalaSVGRenderer.FractalaSVGRenderer.prototype.clear = function()
 
 // ----------------------------------------------------------------------------
 // only doin' circles for now
+// TODO: could just clone each spoke, then rotate
 FractalaSVGRenderer.FractalaSVGRenderer.prototype.renderLayer = function(layer)
 {
 	const degrees_per_radian = 360.0 / (Math.PI*2);
@@ -45,15 +46,27 @@ FractalaSVGRenderer.FractalaSVGRenderer.prototype.renderLayer = function(layer)
 
 	var rotation = my2d.TWO_PI / layer.number_of_spokes;
 
+	// note that spokes are ALL generated at zero rotation, and the sub-layer rotation is used to spin them into the spoke's
+	// final rotation
+	// TODO: better name
+	var current_spoke_rotation = 0.0;
+
 	for (var current_spoke = 0; current_spoke < layer.number_of_spokes; current_spoke += 1)
 	{
+		var current_spoke_rotation_degrees = current_spoke_rotation * degrees_per_radian;
+		var current_sub_transform_attribute = `transform="rotate(${current_spoke_rotation_degrees})"`;
+
+		svg_elem += `<g data-layer-name="${layer.name}_spoke_${current_spoke}" ${current_sub_transform_attribute}>`;
+
 		var current_circle = svgee.circle(	current_center.x, current_center.y, 
 														layer.radius,
 														{ stroke_width:layer.stroke_width, stroke:layer.stroke });
 
 		svg_elem += current_circle;
 
-		current_center = current_center.rotate(rotation);
+		svg_elem += `</g>`;
+
+		current_spoke_rotation += rotation;
 	}
 
 	svg_elem += "</g>";

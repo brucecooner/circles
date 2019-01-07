@@ -100,7 +100,7 @@ class Fractala
 	// -------------------------------------------------------------------------
 	addCirclesLayer(parameters)
 	{
-		var new_layer = newCirclesLayer();
+		var new_layer = this.newCirclesLayer();
 
 		this.layers_order.push(new_layer.name);
 

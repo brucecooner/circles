@@ -6,6 +6,7 @@
 <!--
 TODO:
 SOON...
+* point generator scheme...
 * TESTING???
 *		-is underway at least
 * zoom in/out
@@ -29,12 +30,6 @@ CURRENT LAYER(S?) EDITING
 * dedicated layer edit component
 * the stroke/color thing is getting confusing, sort out
 
-COLORS
-* fill colors
-* all around better color handling
-* color picker?
-	- better placement, feedback?
-
 LAYER UI STUFF
 * icons would be nice
 * expandable layer menu?
@@ -44,6 +39,12 @@ LAYER UI STUFF
 * configurable layer names
 	-will users even care about layer names?
 	-is there some other way to 'name' layers?
+
+COLORS
+* fill colors
+* all around better color handling
+* color picker?
+	- better placement, feedback?
 
 MODAL NEEDS
 * dismissal callback?
@@ -694,7 +695,7 @@ function onColorPicked(color)
 
 <div class="menuBarClass" id="menuBarId">
 	<table>
-		<tr><td id="numSpokesValueId">num</td><td id="numSpokesRangeContainer"></td></tr>
+		<tr><td id="numSpokesValueId">petals</td><td id="numSpokesRangeContainer"></td></tr>
 		<tr><td>length</td><td id="spokeLengthRangeContainer"></td></tr>
 		<tr><td>rot</td><td id="spokeRotOffsetRangeContainer"></td></tr>
 		<tr><td>radius</td><td id="circleRadiusRangeContainer"></td></tr>
@@ -705,7 +706,6 @@ function onColorPicked(color)
 	 <button id="restoreButtonId" onclick="onRestore()">restore</button>
 	 <button onclick="onDownload()">download</button> -->
 </div>
-
 
 <!-- <svg width="100%" height="100%" id="mySVG" viewbox="0 0 110 110"> -->
 <!-- <g> -->
