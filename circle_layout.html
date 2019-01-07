@@ -7,6 +7,8 @@
 TODO:
 SOON...
 * TESTING???
+*		-is underway at least
+* zoom in/out
 * globals into a scope (named editor maybe?)
 * better defaults mgmt/surfacing?
 * split out layer types (eventually)
@@ -120,10 +122,12 @@ body[data-layer-count="0"] #menuBarId {
 <script type="application/javascript" src="libs/modalize.js"></script>
 <script type="application/javascript" src="libs/popupper.js"></script>
 <script type="application/javascript" src="libs/LogChannels.js"></script>
+<script type="application/javascript" src="libs/MiniTester.js"></script>
 <script type="application/javascript" src="svgee.js"></script>
 <script type="application/javascript" src="fncColorPicker.js"></script>
 
 <script type="application/javascript" src="Fractala.js"></script>
+<script type="application/javascript" src="Fractala_tests.js"></script>
 <script type="application/javascript" src="FractalaSVGRenderer.js"></script>
 <script type="application/javascript" src="Action.js"></script>
 
@@ -147,9 +151,10 @@ LogChannels.CaptureConsoleLog();
 LogChannels.EnableChannel(LayerMenu.log_channel, true);
 
 var Actions = ActionInit();
+LogChannels.EnableChannel(Actions.log_channel, false);
 
 // ----- GLOBALS -----
-var main_log_channel = "main";
+var main_log_channel = "index";
 var edit_log_channel = "edit";
 
 var fractala = null;
@@ -163,6 +168,9 @@ var view_height;
 var layer_menu = null;
 
 const storage_key_fractala = "fractala";
+
+// testing stuff
+var fractala_integrity_check_after_queue_processing = true;
 
 // ---- COLOR ----
 // var current_color = { hue:0, saturation:100, lightness:50 };
@@ -419,6 +427,17 @@ function handleAction_download(action)
 }
 
 // --------------------------------------------------------------------
+function queue_processing_done_callback()
+{
+	// console.log(main_log_channel, "queue_processing_done_callback()");
+
+	if (fractala_integrity_check_after_queue_processing)
+	{
+		fractala.testIntegrity();
+	}
+}
+
+// --------------------------------------------------------------------
 var action_map = {};
 
 action_map[Actions.ActionType.add_layer]					= handleAction_addLayer;
@@ -433,7 +452,7 @@ action_map[Actions.ActionType.render]						= handleAction_render;
 action_map[Actions.ActionType.clone_layer]				= handleAction_cloneLayer;
 action_map[Actions.ActionType.download]					= handleAction_download;
 
-Actions.setConfig({action_map:action_map});
+Actions.setConfig({action_map:action_map, queue_processing_done_callback:queue_processing_done_callback});
 
 // --------------------------------------------------------------------
 // --------------------------------------------------------------------

@@ -224,6 +224,88 @@ class Fractala
 		this.layers_order = json_obj.layers_order;
 		this.next_layer_index = json_obj.next_layer_index;
 	};
+
+	// ============================================================================
+	// INTEGRITY CHECKS
+	// ============================================================================
+	layers_and_layers_order_same_length() 
+	{
+		if (Object.keys(this.layers).length !== this.layers_order.length) {
+			throw "layers and layers_order lengths differ";
+		};
+	};
+
+	// ----------------------------------------------------------------------------
+	all_layer_names_appear_in_layers_order() 
+	{
+		var layers_not_in_layers_order = [];
+		Object.keys(this.layers).forEach( (current_layer_key) => {
+			var layer_name_index = this.layers_order.indexOf(current_layer_key);
+			if (layer_name_index < 0) {
+				layers_not_in_layers_order.push(current_layer_key);
+			};
+		});
+
+		if (layers_not_in_layers_order.length > 0)
+		{
+			throw `layers [${layers_not_in_layers_order.join()}] not in layer_orders`;
+		}
+
+	};
+
+	// ----------------------------------------------------------------------------
+	layers_order_names_are_unique()
+	{
+		var non_unique_names = [];
+
+		// for each name in layers_order, loop over layers_order testing for uniqueness
+		this.layers_order.forEach( (current_name, current_name_index) => {
+			for (var test_index = 0; test_index < this.layers_order.length; test_index += 1)
+			{
+				var current_test_name = this.layers_order[test_index];
+				if ((current_name_index !== test_index) && (current_test_name == current_name)) 
+				{
+					// add to non-unique list (unless already there)
+					if (non_unique_names.indexOf(current_test_name) < 0)
+					{
+						non_unique_names.push(current_test_name);
+					}
+				}
+			}
+		});
+
+		if (non_unique_names.length > 0)
+		{
+			throw `non-unique layer names found in layers_order [${non_unique_names.join()}]`;
+		}
+	}
+
+	// =========================================================================
+	testIntegrity()
+	{
+		var log_channel = "fractala_integrity";
+
+		var test_list = [
+			"layers_and_layers_order_same_length",
+			"all_layer_names_appear_in_layers_order",
+			"layers_order_names_are_unique",
+		];
+
+		var integrity_tester = new MiniTester("fractala int chk", this, test_list );
+
+		var results = integrity_tester.test();
+
+		if (results.tests_failed > 0)
+		{
+			results.messages.forEach( (current_message) => {
+				console.log(log_channel, current_message);
+			});
+		}
+		else
+		{
+			console.log(log_channel, "all tests passed");
+		}
+	};
 };
 
 

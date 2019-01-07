@@ -47,11 +47,17 @@ function ActionInit() {
 	// ACTION MAP
 	// { ActionType: function}
 	var action_map = null;
+	var queue_processing_done_callback = null;
 	// -------------------------------
 	function setConfig(config)
 	{
 		validateConfig(config);
+
 		action_map = config.action_map;
+		if (config.hasOwnProperty("queue_processing_done_callback"))
+		{
+			queue_processing_done_callback = config.queue_processing_done_callback;
+		}
 	}
 
 	// =========================================================================
@@ -72,6 +78,12 @@ function ActionInit() {
 		}
 		processing_queue = false;
 		console.log(action_log_channel, "done processing queue");
+
+		if (null !== queue_processing_done_callback)
+		{
+			console.log(action_log_channel, "has post process callback");
+			queue_processing_done_callback();
+		}
 	}
 
 // --------------------------------------------------------------------
@@ -107,6 +119,7 @@ function dispatchAction(action)
 
 	// ----- RETURNED OBJECT -----
 	return {
+		log_channel:action_log_channel,
 		ActionType:ActionType,
 		Action:Action,
 		setConfig:setConfig,
