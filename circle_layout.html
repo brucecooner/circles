@@ -86,12 +86,6 @@ body {
 	padding: 2px;
 }
 
-.menuBarClass button {
-    display:block;
-    border-radius: 3px;
-}
-
-
 .modal {
 	width:50%;
 	height:50%;
@@ -104,6 +98,11 @@ body {
 
 #colorPickId {
 	background-color:black;
+}
+
+.pickColorButton {
+	display:inline;
+	border-radius:5px;
 }
 
 /* disable layer edit controls if no layers */
@@ -184,7 +183,7 @@ var save_dialog = null;
 var current_color = WatchedValue.Create(	{hue:0, saturation:100, lightness:50},
 		[function(value) {	console.log(edit_log_channel, "current_color = " + JSON.stringify(value));
 									getCurrentLayer().stroke = getColorString(value);
-									$("#colorPickButtonId").css({"background-color":getColorString(value)});
+									$("#strokeColorPickButtonId").css({"background-color":getColorString(value)});
 									render();
 									}]);
 
@@ -200,7 +199,7 @@ function syncRangeInputs()
 	$("#circleRadiusId")[0].value = current_layer.radius;
 	$("#strokeWidthId")[0].value = current_layer.stroke_width;
 
-	$("#colorPickButtonId").css("background-color",current_layer.stroke);
+	$("#strokeColorPickButtonId").css("background-color",current_layer.stroke);
 };
 
 // ----------------------------------------------------------------------------
@@ -215,7 +214,7 @@ function setCurrentLayer(layer_name)
 
 	$(`.layerList_Item[data-layer-name=${current_layer_name}]`).attr("data-active-layer", true);
 
-	$("#colorPickButtonId").css("background-color",layer.stroke);
+	$("#strokeColorPickButtonId").css("background-color",layer.stroke);
 
 	syncRangeInputs();
 }
@@ -533,7 +532,7 @@ $(document).ready( function()
 
 	 // color the picker button with current color
 	 // TODO: make function
-	 $("#colorPickButtonId").css("background-color", getColorString(current_color.get()));
+	 $("#strokeColorPickButtonId").css("background-color", getColorString(current_color.get()));
 
 
 	// --- UI INIT ---
@@ -666,7 +665,7 @@ function onAddLayer()
 }
 
 // ----------------------------------------------------------------------------
-function onPickColor()
+function onPickStrokeColor()
 {
 	color_picker_dialog.start();
 }
@@ -681,7 +680,7 @@ function onColorPicked(color)
 	layer_menu.setEditingLayerColor(getColorString(current_color.get()));
 
 	var background_color_css = { "background-color":getColorString(current_color.get()) };
-	$("#colorPickButtonId").css(background_color_css);
+	$("#strokeColorPickButtonId").css(background_color_css);
 
 	render();
 }
@@ -701,10 +700,8 @@ function onColorPicked(color)
 		<tr><td>radius</td><td id="circleRadiusRangeContainer"></td></tr>
 		<tr><td>stroke</td><td id="strokeWidthRangeContainer"></td></tr>
 	</table>
-	 <button id="colorPickButtonId" onclick="onPickColor()">xxx</button>
-	 <!-- <button onclick="onSave()">save</button>
-	 <button id="restoreButtonId" onclick="onRestore()">restore</button>
-	 <button onclick="onDownload()">download</button> -->
+	 <button id="strokeColorPickButtonId" class="pickColorButton" onclick="onPickStrokeColor()">sss</button>
+	 <button id="fillColorPickbuttonId" class="pickColorButton" onclick="onPickFillcolor()">fff</button>
 </div>
 
 <!-- <svg width="100%" height="100%" id="mySVG" viewbox="0 0 110 110"> -->
