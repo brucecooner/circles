@@ -8,18 +8,6 @@
 //	* proper channel names fergoodnesssake
 class Mandala
 {
-	// --- CONST-ISH ---
-	get layer_default_parameters() { return {	number_of_spokes:6, 
-															spoke_length:50,
-															spoke_rot_offset:0,
-															opacity:1,
-															radius:20,	// todo: layer types (this is circles specific)
-															stroke_width:1,
-															stroke:"hsl(0,100%,50%)",	// default red
-															fill:"none",
-														}; 
-	};
-
 	get className()					{ return "Mandala"; };
 	get channelName()					{ return "Mandala" };
 
@@ -169,7 +157,8 @@ class Mandala
 		var existing_layer = this.getLayer(layer_name);
 		// use keys of default parameters to tell what to copy out of existing_layer
 		// TODO: this should of course eventually be done by a function in the eventual class layer
-		Object.keys(this.layer_default_parameters).forEach( (current_parameter) =>
+		// Object.keys(this.layer_default_parameters).forEach( (current_parameter) =>
+		Object.keys(existing_layer.default_parameters).forEach( (current_parameter) =>		
 		{
 			new_layer[current_parameter] = existing_layer[current_parameter];
 		});

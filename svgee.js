@@ -38,7 +38,7 @@ var svgee =
 
 	// -------------------------------------------------------------------------
 	// todo: fill parameter
-	circle: function(x, y, r, style_in=null)
+	circle: function(x, y, r, transform, style_in=null)
 	{
 		var _style = get_style(style_in);
 
@@ -48,6 +48,7 @@ var svgee =
 								 stroke="${_style.stroke}"
 								 fill="${_style.fill}" 
 								 stroke-width="${_style.stroke_width}"
+								 transform="${transform}"
 								 opacity="1.0"/>`;
 	},
 	

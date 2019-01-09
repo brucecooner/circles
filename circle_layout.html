@@ -247,6 +247,8 @@ function syncLayerEditInputs()
 	$("#spokeRotOffsetId")[0].value = current_layer.spoke_rot_offset;
 	$("#circleRadiusId")[0].value = current_layer.radius;
 	$("#strokeWidthId")[0].value = current_layer.stroke_width;
+	$("#spokeEndRotId")[0].value = current_layer.num_points;
+	$("#numPointsId")[0].value = current_layer.spoke_end_rot;
 
 	syncLayerEditStrokeControls(current_layer.strokeOn, current_layer.stroke);
 	syncLayerEditFillControls(current_layer.fillOn, current_layer.fill);
@@ -530,6 +532,30 @@ $(document).ready( function()
 		  wheelStep:1,
         min:1, max:100, step:1})
 
+	// num points
+	let numPointsRangeCallback = myRangeInput.createRange({id:'numPointsId',
+			containerId:'numPointsRangeContainer',
+			onInputHandler:(value) => {
+				Actions.queueAction(new Actions.Action(	Actions.ActionType.set_layer_property,
+																	  [layer_menu.editing_layer],
+																	  {value:value, layer_property:"number_of_points"}));
+			},
+			initialValue:1,
+			wheelStep:1,
+			min:1, max:25, step:1});
+
+	// spoke end rotation
+	let spokeEndRotRangeCallback = myRangeInput.createRange({id:'spokeEndRotId',
+			containerId:'spokeEndRotRangeContainer',
+			onInputHandler:(value) => {
+				Actions.queueAction(new Actions.Action(	Actions.ActionType.set_layer_property,
+																	  [layer_menu.editing_layer],
+																	  {value:value, layer_property:"spoke_end_rot"}));
+			},
+			initialValue:0,
+			wheelStep:Math.PI / 180, // 1 degree
+			min:-Math.PI, max:Math.PI, step:0.01});  
+
 	 // spoke length
     let spokeLengthRangeCallback = myRangeInput.createRange({id:'spokeLengthId',
         containerId:'spokeLengthRangeContainer',
@@ -551,8 +577,8 @@ $(document).ready( function()
 																	{value:value, layer_property:"spoke_rot_offset"}));
 		  },
 		  initialValue:0, //default_spoke_rot_offset,
-		  wheelStep:my2d.TWO_PI / 360,
-        min:0, max:my2d.TWO_PI, step:0.01})
+		  wheelStep:Math.PI / 180,	// 1 degree
+        min:0, max:Math.PI * 2, step:0.01})
 
     // radius
     let circleRadiusRangeCallback = myRangeInput.createRange({id:'circleRadiusId',
@@ -762,7 +788,9 @@ function onFillEnabledChange()
 
 <div class="menuBarClass" id="menuBarId">
 	<table>
-		<tr><td id="numSpokesValueId">petals</td><td id="numSpokesRangeContainer"></td></tr>
+		<tr><td>petals</td><td id="numSpokesRangeContainer"></td></tr>
+		<tr><td>num</td><td id="numPointsRangeContainer"></td></tr>
+		<tr><td>end rot</td><td id="spokeEndRotRangeContainer"></td></tr>
 		<tr><td>length</td><td id="spokeLengthRangeContainer"></td></tr>
 		<tr><td>rot</td><td id="spokeRotOffsetRangeContainer"></td></tr>
 		<tr><td>radius</td><td id="circleRadiusRangeContainer"></td></tr>
