@@ -60,7 +60,7 @@ MandalaSVGRenderer.MandalaSVGRenderer.prototype.renderLayer = function(layer)
 
 		var current_circle = svgee.circle(	current_center.x, current_center.y, 
 														layer.radius,
-														{ stroke_width:layer.stroke_width, stroke:layer.stroke });
+														{ stroke_width:layer.stroke_width, stroke:layer.stroke, fill:layer.fill });
 
 		svg_elem += current_circle;
 

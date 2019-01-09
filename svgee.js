@@ -46,8 +46,8 @@ var svgee =
 								 cy="${y}"
 								 r="${r}"
 								 stroke="${_style.stroke}"
-								 stroke-width="${_style.stroke_width}"
 								 fill="${_style.fill}" 
+								 stroke-width="${_style.stroke_width}"
 								 opacity="1.0"/>`;
 	},
 	

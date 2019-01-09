@@ -16,6 +16,7 @@ class Mandala
 															radius:20,	// todo: layer types (this is circles specific)
 															stroke_width:1,
 															stroke:"hsl(0,100%,50%)",	// default red
+															fill:"none",
 														}; 
 	};
 
@@ -64,7 +65,7 @@ class Mandala
 		}
 		else
 		{
-			console.log(channelName, `ERROR: getLayerByIndex() index ${index} out of bounds`);	
+			console.log(this.channelName, `ERROR: getLayerByIndex() index ${index} out of bounds`);	
 		}
 	};
 
@@ -90,7 +91,7 @@ class Mandala
 	// -------------------------------------------------------------------------
 	addCirclesLayer(parameters)
 	{
-		var new_layer = this.newCirclesLayer();
+		var new_layer = this.newCirclesLayer(parameters);
 
 		this.layers_order.push(new_layer.name);
 
@@ -108,7 +109,7 @@ class Mandala
 
 		if (this.layers.hasOwnProperty(layer_name))
 		{
-			console.log(channelName, `layer ${layer_name} deleted`);
+			console.log(this.channelName, `layer ${layer_name} deleted`);
 			delete this.layers[layer_name];
 			// take out of layers_order
 			var removed = false;
@@ -138,12 +139,12 @@ class Mandala
 			}
 			if (!removed)
 			{
-				console.log(channelName, `could not find layer ${layer_name} in layers_order`);
+				console.log(this.channelName, `could not find layer ${layer_name} in layers_order`);
 			}
 		}
 		else
 		{
-			console.log(channelName, `ERROR: layer ${layer_name} not found for deletion`);
+			console.log(this.channelName, `ERROR: layer ${layer_name} not found for deletion`);
 		}
 
 		return return_name;
@@ -152,7 +153,7 @@ class Mandala
 	// ----------------------------------------------------------------------------
 	deleteAllLayers()
 	{
-		console.log(channelName, "deleting all layers");
+		console.log(this.channelName, "deleting all layers");
 		this.layers = {};
 		this.layers_order = [];
 	}
@@ -160,7 +161,7 @@ class Mandala
 	// ----------------------------------------------------------------------------
 	cloneLayer(layer_name)
 	{
-		console.log(channelName, `cloneLayer(${layer_name})`);
+		console.log(this.channelName, `cloneLayer(${layer_name})`);
 
 		// note: not added to layers_order
 		var new_layer = this.newCirclesLayer();
@@ -208,8 +209,15 @@ class Mandala
 	// ----------------------------------------------------------------------------
 	fromJSON(json_obj)
 	{
-		// get layers
+		// get layers		
 		this.layers = json_obj.layers;
+
+		Object.keys(json_obj.layers).forEach( (current_layer) => {
+			var new_layer = new this.LayerClass(json_obj.layers[current_layer]);
+
+			this.layers[new_layer.name] = new_layer;
+		});
+
 		// get layers_order
 		this.layers_order = json_obj.layers_order;
 		this.next_layer_index = json_obj.next_layer_index;
@@ -270,6 +278,39 @@ class Mandala
 		}
 	}
 
+	// ----------------------------------------------------------------------------
+	all_layers_have_expected_properties()
+	{		
+		var layers_missing_properties = [];
+
+		var expected_properties = [
+			"name",
+		];
+
+		Object.keys(this.layers).forEach( (current_layer_key) => {
+			var current_missing_properties = [];
+			var current_layer = this.layers[current_layer_key];
+
+			expected_properties.forEach( (current_property) => {
+				if (!current_layer.hasOwnProperty(current_property))
+				{
+					current_missing_properties.push(current_property);
+				}
+			});
+
+			if ( current_missing_properties.length > 0)
+			{
+				layers_missing_properties.push(current_layer_key);
+			}
+
+		});
+
+		if (layers_missing_properties.length > 0)
+		{
+			throw `layers ${layers_missing_properties.join()} are missing properties`;
+		}
+	}
+
 	// =========================================================================
 	testIntegrity()
 	{
@@ -279,6 +320,7 @@ class Mandala
 			"layers_and_layers_order_same_length",
 			"all_layer_names_appear_in_layers_order",
 			"layers_order_names_are_unique",
+			"all_layers_have_expected_properties",
 		];
 
 		var integrity_tester = new MiniTester("mandala int chk", this, test_list );

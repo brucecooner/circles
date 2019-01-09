@@ -16,11 +16,14 @@ function MandalaLayerInit()
 						radius:20,	// todo: layer types (this is circles specific)
 						stroke_width:1,
 						stroke:"hsl(0,100%,50%)",	// default red
-						fill:"",	// "" == transparent
+						fill:"none",	// "none" == transparent
 			}; 
 		};
 
 		get className()	{ return "Layer"; };
+
+		get strokeOn()		{ return this.hasOwnProperty("stroke") && this.stroke !== "none" };
+		get fillOn()		{ return this.hasOwnProperty("fill") && this.fill !== "none" };
 
 		// ------------------------------------------------------------
 		constructor(parameters)

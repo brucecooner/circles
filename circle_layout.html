@@ -6,6 +6,8 @@
 <!--
 TODO:
 SOON...
+* need to read fill/stroke on/off from LAYER
+* highlight layer is broke again
 * point generator scheme...
 * TESTING???
 *		-is underway at least
@@ -20,7 +22,7 @@ SOON...
 * styles to dedicated css
 
 * Mandala
-* from json should probably construct instances?
+* fromJson should probably construct instances?
 * render order iterator?
 * Layer class?
 * REALLY need hidden UUID for layer keys instead of relying on name
@@ -156,13 +158,14 @@ var Actions = ActionInit();
 LogChannels.EnableChannel(Actions.log_channel, false);
 
 // ----- GLOBALS -----
+var disabled_color_string = "hsl(0,0%, 50%)";
 var main_log_channel = "index";
 var edit_log_channel = "edit";
 
 var mandala = null;
 var mandala_svg_renderer = null;
 
-var current_layer_name = "";
+// var current_layer_name = "";
 
 var view_width;
 var view_height;
@@ -175,23 +178,70 @@ const storage_key_mandala = "mandala";
 var mandala_integrity_check_after_queue_processing = true;
 
 // ---- COLOR ----
-// var current_color = { hue:0, saturation:100, lightness:50 };
 var color_picker = null;
 var color_picker_dialog = null;
+
+// if not picking stroke, then picking fill
+// yeah I know this is lame and will get fixed
+var picking_stroke_color = true;
 
 // ---- SAVE ----
 var save_dialog = null;
 
-var current_color = WatchedValue.Create(	{hue:0, saturation:100, lightness:50},
-		[function(value) {	console.log(edit_log_channel, "current_color = " + JSON.stringify(value));
+var current_stroke_enabled = WatchedValue.Create(	true,
+		[function(value)	{	console.log(edit_log_channel, "stroke enabled = " + value);
+									var color_string = value ? getColorString(current_stroke_color.get()) : "none";
+									Actions.queueAction(new Actions.Action(	Actions.ActionType.set_layer_property,
+																							[layer_menu.editing_layer],
+																							{value:color_string, layer_property:"stroke"}));
+									syncLayerEditStrokeControls(value, getColorString(current_stroke_color.get()));
+									render();
+									}]);
+
+var current_fill_enabled = WatchedValue.Create(	false,
+		[function(value)	{	console.log(edit_log_channel, "fill enabled = " + value);
+									var color_string = value ? getColorString(current_fill_color.get()) : "none";
+									Actions.queueAction(new Actions.Action(	Actions.ActionType.set_layer_property,
+																								[layer_menu.editing_layer],
+																								{value:color_string, layer_property:"fill"}));
+									syncLayerEditFillControls(value, getColorString(current_fill_color.get()));
+									render();
+									}]);
+
+
+var current_stroke_color = WatchedValue.Create(	{hue:0, saturation:100, lightness:50},
+		[function(value) {	console.log(edit_log_channel, "current_stroke_color = " + JSON.stringify(value));
 									getCurrentLayer().stroke = getColorString(value);
+									layer_menu.setEditingLayerColor(getColorString(current_stroke_color.get()));
 									$("#strokeColorPickButtonId").css({"background-color":getColorString(value)});
 									render();
 									}]);
 
+var current_fill_color = WatchedValue.Create(	{hue:100, saturation:100, lightness:50},
+		[function(value) {	console.log(edit_log_channel, "current_fill_color = " + JSON.stringify(value));
+									getCurrentLayer().fill = getColorString(value);
+									$("#fillColorPickButtonId").css({"background-color":getColorString(value)});
+									render();
+									}]);
+
+// ----------------------------------------------------------------------------
+function syncLayerEditStrokeControls(stroke_enabled, stroke_color_string)
+{
+	$("#strokeEnabledChkId").prop("checked", stroke_enabled);
+	$("#strokeColorPickButtonId").prop("disabled", !stroke_enabled);
+	$("#strokeColorPickButtonId").css({"background-color":stroke_enabled ? stroke_color_string : disabled_color_string});
+};
+
+// ----------------------------------------------------------------------------
+function syncLayerEditFillControls(fill_enabled, fill_color_string)
+{
+	$("#fillEnabledChkId").prop("checked", fill_enabled);
+	$("#fillColorPickButtonId").prop("disabled", !fill_enabled);
+	$("#fillColorPickButtonId").css({"background-color":fill_enabled ? fill_color_string : disabled_color_string });
+};
+
 // --------------------------------------------------------
-// TODO: BETTER NAME AND CODE
-function syncRangeInputs()
+function syncLayerEditInputs()
 {
 	var current_layer = getCurrentLayer();
 
@@ -201,24 +251,24 @@ function syncRangeInputs()
 	$("#circleRadiusId")[0].value = current_layer.radius;
 	$("#strokeWidthId")[0].value = current_layer.stroke_width;
 
-	$("#strokeColorPickButtonId").css("background-color",current_layer.stroke);
+	syncLayerEditStrokeControls(current_layer.strokeOn, current_layer.stroke);
+	syncLayerEditFillControls(current_layer.fillOn, current_layer.fill);
 };
 
 // ----------------------------------------------------------------------------
+// TODO: this should be in the layers menu
 function setCurrentLayer(layer_name)
 {
 	var layer = mandala.getLayer(layer_name);
 
 	$(`.layerList_Item`).attr("data-active-layer", false);
 
-	current_layer_name = layer_name;
+	// current_layer_name = layer_name;
 	console.log("setting layer to " + layer_name);
 
-	$(`.layerList_Item[data-layer-name=${current_layer_name}]`).attr("data-active-layer", true);
+	$(`.layerList_Item[data-layer-name=${layer_name}]`).attr("data-active-layer", true);
 
-	$("#strokeColorPickButtonId").css("background-color",layer.stroke);
-
-	syncRangeInputs();
+	syncLayerEditInputs();
 }
 
 // ----------------------------------------------------------------------------
@@ -239,7 +289,7 @@ function getColorString(color)
 function setCurrentColor(hsl)
 {
 	// todo: fill out hsl? 
-	current_color.set(hsl);
+	current_stroke_color.set(hsl);
 }
 
 // --------------------------------------------------------------------
@@ -285,7 +335,10 @@ function handleAction_addLayer(action)
 	console.log(main_log_channel, "handleAction_addLayer()"); 
 
 	// model
-	var new_layer = mandala.addCirclesLayer({stroke:getColorString(current_color.get())});
+	// TODO: FUNCTIONALIZE THIS
+	var stroke_color_string = current_stroke_enabled.get() ? getColorString(current_stroke_color.get()) : "none";
+	var fill_color_string = current_fill_enabled.get() ? getColorString(current_fill_color.get()) : "none";
+	var new_layer = mandala.addCirclesLayer({stroke:stroke_color_string, fill:fill_color_string});
 
 	// interface
 	layer_menu.addLayer(new_layer.name);
@@ -340,7 +393,7 @@ function handleAction_deleteLayer(action)
 // --------------------------------------------------------------------
 function setLayerProperty(property_key, layers, value )
 {
-	console.log(main_log_channel, `setLayerProp(${layers[0]}, ${value})`);
+	console.log(main_log_channel, `setLayerProp(${layers[0]}, ${property_key}, ${value})`);
 
 	// model
 	mandala.getLayer(layers[0])[property_key] = value;
@@ -354,7 +407,7 @@ function handleAction_setEditingLayers(action)
 	console.log(main_log_channel, `setEditingLayers()`);
 	console.log(main_log_channel, action.layers);
 
-	syncRangeInputs();
+	syncLayerEditInputs();
 }
 
 // --------------------------------------------------------------------
@@ -529,19 +582,16 @@ $(document).ready( function()
         min:1, max:20, step:1})
 	 
 	// --- UI INIT ---
-	color_picker = new fncColorPicker.Create({color_picked_handler:onColorPicked, size:250, container_div_id:"colorpick", hue:current_color.hue, rot_offset:-Math.PI * 0.5});
+	color_picker = new fncColorPicker.Create({color_picked_handler:onColorPicked, size:250, container_div_id:"colorpick", hue:current_stroke_color.hue, rot_offset:-Math.PI * 0.5});
 	color_picker_dialog = new modalize.Create($("body"), color_picker.$container_div, "colorpick_cover", {left:50,top:20});
 	save_dialog = new SaveDialog.Create();
-
-	 // color the picker button with current color
-	 // TODO: make function
-	 $("#strokeColorPickButtonId").css("background-color", getColorString(current_color.get()));
-
 
 	// --- UI INIT ---
 	layer_menu = new LayerMenu(mandala, Actions);
 	layer_menu.generateMenu();
 	$("body").append(layer_menu.$menu_content);
+
+	// note that model initialization should sync controls to whatever goes into model
 
 	// var new_layer = handleAction_addLayer({});
 	// restore?
@@ -555,8 +605,6 @@ $(document).ready( function()
 		$("#restoreButtonId").prop("disabled", true);
 		Actions.queueAction(new Actions.Action(Actions.ActionType.add_layer, []));
 	}
-
-	syncRangeInputs();
 
 	render();
 });
@@ -663,29 +711,49 @@ function onAddLayer()
 {
 	var new_layer = addLayer();
 	setCurrentLayer(new_layer.name);
-	syncRangeInputs();
+	syncLayerEditInputs();
 	render();
 }
 
 // ----------------------------------------------------------------------------
-function onPickStrokeColor()
+function onPickColor(is_picking_stroke_color)
 {
+	picking_stroke_color = is_picking_stroke_color;
+
 	color_picker_dialog.start();
 }
 
 // ----------------------------------------------------------------------------
+// callback from picker dialog
 function onColorPicked(color)
 {
+	console.log(edit_log_channel, `onColorPicked:${JSON.stringify(color)}`)
 	color_picker_dialog.dismiss();
 
-	current_color.set(color);
-
-	layer_menu.setEditingLayerColor(getColorString(current_color.get()));
-
-	var background_color_css = { "background-color":getColorString(current_color.get()) };
-	$("#strokeColorPickButtonId").css(background_color_css);
+	// picking fill or stroke?
+	// oh man, gross
+	if (picking_stroke_color)
+	{
+		current_stroke_color.set(color);
+	}
+	else
+	{
+		current_fill_color.set(color);
+	}
 
 	render();
+}
+
+// ----------------------------------------------------------------------------
+function onStrokeEnabledChange()
+{
+	current_stroke_enabled.set($("#strokeEnabledChkId").prop("checked"));
+}
+
+// ----------------------------------------------------------------------------
+function onFillEnabledChange()
+{
+	current_fill_enabled.set($("#fillEnabledChkId").prop("checked"));
 }
 
 </script>
@@ -703,8 +771,10 @@ function onColorPicked(color)
 		<tr><td>radius</td><td id="circleRadiusRangeContainer"></td></tr>
 		<tr><td>stroke</td><td id="strokeWidthRangeContainer"></td></tr>
 	</table>
-	 <button id="strokeColorPickButtonId" class="pickColorButton" onclick="onPickStrokeColor()">sss</button>
-	 <button id="fillColorPickbuttonId" class="pickColorButton" onclick="onPickFillcolor()">fff</button>
+	 <input type="checkbox" id="strokeEnabledChkId" onChange="onStrokeEnabledChange();">
+	 <button id="strokeColorPickButtonId" class="pickColorButton" onclick="onPickColor(true)">sss</button>
+	 <input type="checkbox" id="fillEnabledChkId" onChange="onFillEnabledChange();">
+	 <button id="fillColorPickButtonId" class="pickColorButton" onclick="onPickColor(false)">fff</button>
 </div>
 
 <!-- <svg width="100%" height="100%" id="mySVG" viewbox="0 0 110 110"> -->
