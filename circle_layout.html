@@ -6,8 +6,6 @@
 <!--
 TODO:
 SOON...
-* need to read fill/stroke on/off from LAYER
-* highlight layer is broke again
 * point generator scheme...
 * TESTING???
 *		-is underway at least
@@ -22,9 +20,7 @@ SOON...
 * styles to dedicated css
 
 * Mandala
-* fromJson should probably construct instances?
 * render order iterator?
-* Layer class?
 * REALLY need hidden UUID for layer keys instead of relying on name
 * mirror mode?
 
@@ -44,10 +40,11 @@ LAYER UI STUFF
 	-is there some other way to 'name' layers?
 
 COLORS
-* fill colors
 * all around better color handling
+	- need saturation/lightness controls
 * color picker?
 	- better placement, feedback?
+
 
 MODAL NEEDS
 * dismissal callback?
@@ -421,7 +418,7 @@ function handleAction_highlightLayer(action)
 	}
 	else
 	{
-		$("g").attr("opacity", 0.25);
+		$("g[data-layer-name]").attr("opacity", 0.25);
 		$(`g[data-layer-name=${action.layers[0]}]`).attr("opacity", 1);
 	}
 }

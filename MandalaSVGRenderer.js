@@ -56,7 +56,7 @@ MandalaSVGRenderer.MandalaSVGRenderer.prototype.renderLayer = function(layer)
 		var current_spoke_rotation_degrees = current_spoke_rotation * degrees_per_radian;
 		var current_sub_transform_attribute = `transform="rotate(${current_spoke_rotation_degrees})"`;
 
-		svg_elem += `<g data-layer-name="${layer.name}_spoke_${current_spoke}" ${current_sub_transform_attribute}>`;
+		svg_elem += `<g data-spoke-name="${layer.name}_spoke_${current_spoke}" ${current_sub_transform_attribute}>`;
 
 		var current_circle = svgee.circle(	current_center.x, current_center.y, 
 														layer.radius,
