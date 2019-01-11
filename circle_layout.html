@@ -125,8 +125,10 @@ body[data-layer-count="0"] #menuBarId {
 <script type="application/javascript" src="libs/MiniTester.js"></script>
 <script type="application/javascript" src="svgee.js"></script>
 <script type="application/javascript" src="fncColorPicker.js"></script>
+<script type="application/javascript" src="genSinePoints.js"></script>
 
 <script type="application/javascript" src="MandalaLayer.js"></script>
+<script type="application/javascript" src="MandalaPetal.js"></script>
 <script type="application/javascript" src="Mandala.js"></script>
 <script type="application/javascript" src="Mandala_tests.js"></script>
 <script type="application/javascript" src="MandalaSVGRenderer.js"></script>
@@ -155,6 +157,7 @@ var Actions = ActionInit();
 LogChannels.EnableChannel(Actions.log_channel, false);
 
 // ----- GLOBALS -----
+
 var disabled_color_string = "hsl(0,0%, 50%)";
 var main_log_channel = "index";
 var edit_log_channel = "edit";
@@ -514,7 +517,8 @@ Actions.setConfig({action_map:action_map, queue_processing_done_callback:queue_p
 $(document).ready( function()
 {
 	// ---- DATA INIT ----
-	mandala_layer_class = MandalaLayerInit();
+	petal_class = initMandalaPetal();
+	mandala_layer_class = MandalaLayerInit(petal_class);
 	mandala = new Mandala(mandala_layer_class);
 	mandala_svg_renderer = new MandalaSVGRenderer.MandalaSVGRenderer(mandala, {width:view_width, height:view_width});
 
@@ -628,6 +632,8 @@ $(document).ready( function()
 		$("#restoreButtonId").prop("disabled", true);
 		Actions.queueAction(new Actions.Action(Actions.ActionType.add_layer, []));
 	}
+	
+	// petal = new petalClass({amplitude:20, number_of_points:20});
 
 	render();
 });
@@ -690,7 +696,7 @@ function render()
     $("#mySVG").remove();
 
    // var svg_elem = generate_svg();
-	var svg_elem = mandala_svg_renderer.render();
+	var svg_elem = mandala_svg_renderer.renderWithPetals();
 
     $("body").append(svg_elem);
 }
@@ -777,6 +783,86 @@ function onStrokeEnabledChange()
 function onFillEnabledChange()
 {
 	current_fill_enabled.set($("#fillEnabledChkId").prop("checked"));
+}
+
+// ----------------------------------------------------------------------------
+var amplitude = 1;
+var num_points = 100;
+function sineTest()
+{
+	var max_x = view_width * 0.75;
+
+	$("#mySVG").remove();
+
+	var width = view_width;
+	var height = view_height;
+	var x = -width / 2;
+	var y = -height / 2;
+
+	x= 0; 
+
+var svg_elem = `<svg width="100%" height="100%" id="mySVG" viewbox="${x} ${y} ${width} ${height}">`;
+
+	var lines = "";
+	lines += svgee.line(0,-100, 0, 100, {stroke:"rgb(200,200,200)", stroke_width:1});
+	lines += svgee.line(0,0, max_x, 0, {stroke:"rgb(200,200,200)", stroke_width:1});
+
+	svg_elem += lines;
+
+	last_x = 0; last_y = 0;
+
+	var total_distance = 0.0;
+
+	var frequency = 1 / num_points;
+	for (var index = 1; index <= num_points; index += 1)
+	{
+		var cur_t = index * frequency;
+		var cur_y = Math.sin(Math.PI*2 * cur_t) * amplitude;
+		var cur_x = cur_t * max_x;
+
+		var cur_line = svgee.line(last_x, last_y, cur_x, cur_y, {stroke:"black"});
+		svg_elem += cur_line;
+
+		// dist
+		var delta_x = cur_x - last_x;
+		var delta_y = cur_y - last_y;
+		total_distance += Math.sqrt( (delta_x*delta_x) + (delta_y*delta_y) );
+
+		last_x = cur_x;
+		last_y = cur_y;
+		
+	}
+
+	svg_elem += lines;
+
+	last_x = 0; last_y = 0;
+
+	for (var index = 1; index <= num_points; index += 1)
+	{
+		var cur_t = index * frequency;
+		var cur_y = Math.sin(Math.PI*2 * cur_t) * amplitude;
+		var cur_x = cur_t * max_x;
+
+		var cur_line = svgee.line(last_x, last_y, cur_x, cur_y, {stroke:"black"});
+		svg_elem += cur_line;
+
+		// dist
+		var delta_x = cur_x - last_x;
+		var delta_y = cur_y - last_y;
+		total_distance += Math.sqrt( (delta_x*delta_x) + (delta_y*delta_y) );
+
+		last_x = cur_x;
+		last_y = cur_y;
+		
+	}
+
+
+
+	svg_elem += "</svg>";
+
+	$("body").append(svg_elem);
+
+	console.log(`total distance = ${total_distance} `);
 }
 
 </script>

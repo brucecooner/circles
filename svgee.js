@@ -62,9 +62,8 @@ var svgee =
 							  y1="${y1}"
 							  x2="${x2}"
 							  y2="${y2}"
-							  stroke:"${_style.stroke}"
-							  stroke-width:"${_style.stroke_width}"
-							  fill:"${_style.fill}" />`;
+							  stroke="${_style.stroke}"
+							  stroke-width="${_style.stroke_width}" />`;
 	}
 	
 

@@ -1,0 +1,125 @@
+<html>
+
+<head>
+<style>
+body { margin:0px; padding:0px; }
+#cnvs { border:1px solid blue; }
+</style>
+
+<script
+  src="https://code.jquery.com/jquery-3.3.1.js"
+  integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60="
+  crossorigin="anonymous">
+</script>
+
+<script src="genSinePoints.js" type="application/javascript"></script>
+
+<!-- - - - - - - - - - - - - - - - - - - - - - - - -  -->
+<script>
+    var canvas_width = 500;
+    var canvas_height = 500;
+    // in screen space
+    var origin_x = 0;
+    var origin_y = 0;
+
+    // canvas context
+    var ctx = null;
+
+    function clearScreen()
+    {
+        ctx.clearRect(0,0,canvas_width, canvas_height);
+    };
+
+    function drawOriginLines()
+    {
+        ctx.strokeStyle = "#888888";
+
+        line(0,0,canvas_width,0);
+        line(0,-1000,0,1000);
+    };
+
+    // --------------------------------------------
+    function line(x1,y1,x2,y2)
+    {
+        x1 += origin_x;
+        x2 += origin_x;
+
+        y1 += origin_y;
+        y2 += origin_y;
+
+        ctx.beginPath();
+        ctx.moveTo(x1,y1);
+        ctx.lineTo(x2,y2);
+        ctx.stroke();   
+    }
+
+
+    var max_x = canvas_width;
+
+	var total_rotation = Math.PI * 2;
+    var default_num_points = 10;
+    var amplitude = 30;
+
+    // -----------------------------------------------
+    function test2(num_points, total_rotation)
+    {
+        clearScreen();
+        drawOriginLines();
+
+        ctx.strokeStyle = "#FF0000";
+
+		points = generateSinePoints(num_points, total_rotation);
+
+        screen_x_translate = (max_x / 1.0); //total_rotation);
+        screen_y_translate = amplitude;
+
+        // ---------------------------------------------------------------
+        // translate to screen space
+        points.forEach( (cur_point) => {
+            x = cur_point.x * screen_x_translate;
+            y = cur_point.y * screen_y_translate;
+
+            ctx.arc(x + origin_x, y + origin_y, 5, 0, 2 * Math.PI);
+            ctx.stroke();
+        });
+
+
+    };
+
+
+    // --------------------------------------------
+    function onBodyLoad()
+    {
+        console.log("onBodyLoad()");
+
+        canvas_width = $("body").width();
+        canvas_height = $("body").height();
+        
+        var cnvs = $(`<canvas id="cnvs" width="${canvas_width}" height="${canvas_height}"></canvas>`);
+
+        $("body").append(cnvs);
+
+        origin_x = 0;
+        origin_y = canvas_height / 2;
+
+        var cnvs = $("#cnvs");
+
+        $("#cnvs").css({"width":canvas_width, "height":canvas_height});
+
+        ctx = cnvs[0].getContext("2d");
+
+        // ctx.translate(origin_x, origin_y);
+
+        drawOriginLines();
+
+        test2(default_num_points, Math.PI * 2);
+    }
+
+</script>
+
+</head>
+
+<body onload="onBodyLoad()">
+    <!-- <canvas id="cnvs" width="500" height="500"></canvas> -->
+</body>
+</html>

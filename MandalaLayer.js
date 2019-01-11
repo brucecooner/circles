@@ -4,7 +4,7 @@
  * 		seems unnecessary? Can generate spoke points once then clone upon rendering, letting svg transform handle
  * 		the rotation
  */
-function MandalaLayerInit()
+function MandalaLayerInit(petal_class)
 {
 	class Layer
 	{
@@ -32,6 +32,20 @@ function MandalaLayerInit()
 		{
 			Object.assign(this, this.default_parameters);
 			Object.assign(this, parameters);
+
+			this.petal_class = petal_class;
+
+			var petal_params = {
+				number_of_points:20,
+				length:150,
+				radius:5,
+		
+				end_rot:0,
+				amplitude:40,				// if >0, points are along a sine curve with this amplitude
+				sine_length:Math.PI,	// rotational distance of sine x coordinate
+			};
+
+			this.petal_prototype = new this.petal_class(petal_params);
 		}
 	};
 
