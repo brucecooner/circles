@@ -23,7 +23,7 @@ function initMandalaLayerClass()
 
 		// base points
 		number_of_points:	1,
-		sine_length:		0,
+		sine_length:		Math.PI,
 		amplitude:			0,
 
 		spoke_rot_offset:	0,
@@ -43,8 +43,8 @@ function initMandalaLayerClass()
 		length:				{ max:500, min:0 },
 		mirror:false,	// if true, base points are mirrored 
 		// base points
-		number_of_points:	{ min:1, max:50 },	// number of points along petal
-		sine_length:		{ min:-Math.PI, max:Math.PI*4 }, // hard to explain
+		number_of_points:	{ min:1, max:150 },	// number of points along petal
+		sine_length:		{ min:Math.PI, max:Math.PI*4 }, // hard to explain
 		amplitude:			{ min:0, max:100 },
 		spoke_rot_offset:	{ min:-Math.PI, max:Math.PI },
 		// circle related
@@ -110,7 +110,7 @@ function initMandalaLayerClass()
 				amplitude:				function() { this.generateBasePoints(); this.generatePoints(); }.bind(this),
 				// non-base points affected
 				number_of_spokes:		function() { this.generatePoints(); }.bind(this),
-				length:					function() { this.generatePoints(); }.bind(this),
+				length:					function() { this.generatePoints(); }.bind(this),				
 				};
 
 			this.generateBasePoints();
@@ -163,7 +163,7 @@ function initMandalaLayerClass()
 				// Y
 				if (this.amplitude > 0)
 				{
-					cur_point.y = current_base_point.y * amplitude;
+					cur_point.y = current_base_point.y * this.amplitude;
 				}
 				else
 				{

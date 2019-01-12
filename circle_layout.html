@@ -7,7 +7,8 @@
 TODO:
 
 BUGS:
-* turning fill on/off : no effect
+* petal rotation limited to PI
+* use default layer params to intialize range inputs
 
 GOOD IDEAS...
 * assign z-indices
@@ -574,7 +575,7 @@ $(document).ready( function()
 			},
 			initialValue:1,
 			wheelStep:1,
-			min:1, max:25, step:1});
+			min:1, max:100, step:1});
 
 	// spoke end rotation
 	let spokeEndRotRangeCallback = myRangeInput.createRange({id:'spokeEndRotId',
@@ -640,11 +641,26 @@ $(document).ready( function()
 	let sineWavesRangeCallback = myRangeInput.createRange({id:"petalWavesRangeId",
 		  containerId:"wavesRangeContainer",
 		  onInputHandler:(value) => {
-			console.log("TODO ADD SINE WAVE SET");
+			Actions.queueAction(new Actions.Action(	Actions.ActionType.set_layer_property,
+																	[layer_menu.editing_layer],
+																	{value:value, layer_property:"sine_length"}));
 		  },
 		  initialValue:0,
 		  wheelStep:Math.PI / 180, // 1 degree
-		  min:0, max:Math.PI * 2, step:Math.PI / 180 });
+		  min:Math.PI, max:Math.PI * 4, step:Math.PI / 180 });
+
+    // amplitude 
+    let amplitudeRangeCallback = myRangeInput.createRange({id:'amplitudeId',
+        containerId:'amplitudeRangeContainer',
+        onInputHandler:(value) => {
+			Actions.queueAction(new Actions.Action(	Actions.ActionType.set_layer_property,
+																	[layer_menu.editing_layer],
+																	{value:value, layer_property:"amplitude"}));
+		  },
+		  initialValue:0, //default_stroke_width,
+		  wheelStep:1,
+        min:1, max:100, step:1});
+
 
 	// --- UI INIT ---
 	color_picker = new fncColorPicker.Create({color_picked_handler:onColorPicked, size:250, container_div_id:"colorpick", hue:current_stroke_color.hue, rot_offset:-Math.PI * 0.5});
@@ -933,6 +949,7 @@ var svg_elem = `<svg width="100%" height="100%" id="mySVG" viewbox="${x} ${y} ${
 		<tr><td>num</td><td id="numPointsRangeContainer"></td></tr>
 		<tr><td>radius</td><td id="circleRadiusRangeContainer"></td></tr>
 		<tr><td>waves</td><td id="wavesRangeContainer"></td></tr>
+		<tr><td>amp</td><td id="amplitudeRangeContainer"></td></tr>
 
 		<!-- style parameters -->
 		<tr><td>stroke</td><td id="strokeWidthRangeContainer"></td></tr>

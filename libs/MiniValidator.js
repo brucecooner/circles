@@ -1,5 +1,6 @@
 /* TODO:
 * class with functions for easier use (just get values, report to console, etc.)
+* make non-validated parameter reporting optional
 */
 
 function generateValidatorFunctions(validators_obj)
@@ -16,12 +17,13 @@ function generateValidatorFunctions(validators_obj)
 		};
 
 		// non-validated properties
-		Object.keys(test_obj).forEach( (current_object_key) => {
-			if (false == validators_obj.hasOwnProperty(current_object_key))
-			{
-				result.non_validated_properties.push(current_object_key);
-			}
-		});
+		// TODO: good idea, make optional
+		// Object.keys(test_obj).forEach( (current_object_key) => {
+		// 	if (false == validators_obj.hasOwnProperty(current_object_key))
+		// 	{
+		// 		result.non_validated_properties.push(current_object_key);
+		// 	}
+		// });
 
 		Object.keys(validators_obj).forEach( (current_validator_key) => {
 			if (!test_obj.hasOwnProperty(current_validator_key))

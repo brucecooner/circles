@@ -91,7 +91,7 @@ function generateBasePoints(config)
 {
 	var base_points = [];
 	
-	if (false == (config.sine_length && config.number_of_points > 1 ))
+	if (false == (config.amplitude && config.number_of_points > 1 ))
 	{
 		var point_frequency = 1 / config.number_of_points;
 		for (var current_index = 0; current_index < config.number_of_points; current_index += 1)
