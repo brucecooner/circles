@@ -58,9 +58,9 @@ function generateValidatorFunctions(validators_obj)
 							invalid_value:false };
 
 		// non-validated?
+		// note: does NOT trigger failure
 		if (false == validators_obj.hasOwnProperty(name))
 		{
-			result.passed = false;
 			result.no_validator = true;
 		}
 		else
