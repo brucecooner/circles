@@ -191,9 +191,17 @@ class Mandala
 	toJSON()
 	{
 		var json_obj = {};
-		// get layers
-		json_obj.layers = this.layers;
+		
+		// layers
+		var json_layers = {};
+		// json_obj.layers = this.layers;
+		Object.keys(this.layers).forEach( (current_layer_name) => {
+			var current_layer = this.layers[current_layer_name];
+			json_layers[current_layer.name] = current_layer.toJSON();
+		});
+
 		// get layers_order
+		json_obj.layers = json_layers;
 		json_obj.layers_order = this.layers_order;
 		json_obj.next_layer_index = this.next_layer_index;
 
@@ -204,7 +212,7 @@ class Mandala
 	fromJSON(json_obj)
 	{
 		// get layers		
-		this.layers = json_obj.layers;
+		// this.layers = json_obj.layers;
 
 		Object.keys(json_obj.layers).forEach( (current_layer) => {
 			var new_layer = new this.LayerClass(json_obj.layers[current_layer]);

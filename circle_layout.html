@@ -10,13 +10,11 @@ BUGS:
 * turning fill on/off : no effect
 
 GOOD IDEAS...
-* assign z-indices!
-* only trail edited layer
+* assign z-indices
+* only trail edited layer?
 * some sort of bundling with module support?
 * BRING BACK THE COLOR JOURNEY!
-* point generator scheme...
-* TESTING???
-*		-is underway at least
+
 * zoom in/out
 * globals into a scope (named editor maybe?)
 * better defaults mgmt/surfacing?
@@ -27,9 +25,13 @@ GOOD IDEAS...
 * ID EVERYTHING! (working on it)
 * styles to dedicated css
 
+* TESTING???
+* is underway at least
+* better integration of layer integrity testing with mandala
+
 * Mandala
 * render order iterator?
-* REALLY need hidden UUID for layer keys instead of relying on name
+* sorta need hidden UUID for layer keys instead of relying on name
 * mirror mode?
 
 CURRENT LAYER(S?) EDITING
@@ -620,7 +622,7 @@ $(document).ready( function()
 		  },
         initialValue:0, //default_circle_radius,
 		  wheelStep:1,
-        min:5, max:500, step:1})
+        min:5, max:500, step:1});
 
     // stroke_width
     let strokeWidthRangeCallback = myRangeInput.createRange({id:'strokeWidthId',
@@ -632,8 +634,18 @@ $(document).ready( function()
 		  },
 		  initialValue:0, //default_stroke_width,
 		  wheelStep:1,
-        min:1, max:20, step:1})
+        min:1, max:20, step:1});
 	 
+	// wavesRangeContainer
+	let sineWavesRangeCallback = myRangeInput.createRange({id:"petalWavesRangeId",
+		  containerId:"wavesRangeContainer",
+		  onInputHandler:(value) => {
+			console.log("TODO ADD SINE WAVE SET");
+		  },
+		  initialValue:0,
+		  wheelStep:Math.PI / 180, // 1 degree
+		  min:0, max:Math.PI * 2, step:Math.PI / 180 });
+
 	// --- UI INIT ---
 	color_picker = new fncColorPicker.Create({color_picked_handler:onColorPicked, size:250, container_div_id:"colorpick", hue:current_stroke_color.hue, rot_offset:-Math.PI * 0.5});
 	color_picker_dialog = new modalize.Create($("body"), color_picker.$container_div, "colorpick_cover", {left:50,top:20});
@@ -912,13 +924,21 @@ var svg_elem = `<svg width="100%" height="100%" id="mySVG" viewbox="${x} ${y} ${
 
 <div class="menuBarClass" id="menuBarId">
 	<table>
+		<!-- layer parameters -->
 		<tr><td>petals</td><td id="numSpokesRangeContainer"></td></tr>
-		<tr><td>num</td><td id="numPointsRangeContainer"></td></tr>
-		<tr><td>end rot</td><td id="spokeEndRotRangeContainer"></td></tr>
 		<tr><td>length</td><td id="spokeLengthRangeContainer"></td></tr>
 		<tr><td>rot</td><td id="spokeRotOffsetRangeContainer"></td></tr>
+
+		<!-- base parameters -->
+		<tr><td>num</td><td id="numPointsRangeContainer"></td></tr>
 		<tr><td>radius</td><td id="circleRadiusRangeContainer"></td></tr>
+		<tr><td>waves</td><td id="wavesRangeContainer"></td></tr>
+
+		<!-- style parameters -->
 		<tr><td>stroke</td><td id="strokeWidthRangeContainer"></td></tr>
+
+		<!-- ??? -->
+		<tr><td>end rot</td><td id="spokeEndRotRangeContainer"></td></tr>
 	</table>
 	 <input type="checkbox" id="strokeEnabledChkId" onChange="onStrokeEnabledChange();">
 	 <button id="strokeColorPickButtonId" class="pickColorButton" onclick="onPickColor(true)">sss</button>

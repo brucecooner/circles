@@ -92,6 +92,12 @@ function initMandalaLayerClass()
 					}
 				});
 			}
+			
+			// not strictly graphically related parameters we are interested in
+			if (parameters.hasOwnProperty("name"))
+			{
+				this.name = parameters.name;
+			}
 
 			this.base_points = [];
 			this.points = [];
@@ -165,6 +171,19 @@ function initMandalaLayerClass()
 				}
 				this.points.push(cur_point);
 			});
+		};
+
+		// ------------------------------------------------------------
+		toJSON()
+		{
+			var return_obj = {};
+
+			return_obj.name = this.name;
+			Object.keys(this.defaultLayerParameters).forEach( (current_property_name) => {
+				return_obj[current_property_name] = this[current_property_name];
+			});
+
+			return return_obj;
 		};
 
 		// ------------------------------------------------------------
