@@ -84,6 +84,7 @@ body {
 	border-bottom-left-radius: 3px;
 	background-color:lightgray;
 	padding: 2px;
+	z-index:10;
 }
 
 .modal {
@@ -108,6 +109,17 @@ body {
 /* disable layer edit controls if no layers */
 body[data-layer-count="0"] #menuBarId {
 	display:none;
+}
+
+svg {
+	position:absolute;
+	left:0px;
+	right:0px;
+}
+
+.fading {
+	opacity: 0;
+	transition: opacity 3.5s ease-out;
 }
 /* ------ */
 
@@ -165,6 +177,7 @@ var edit_log_channel = "edit";
 var mandala = null;
 var mandala_svg_renderer = null;
 
+var render_trails = true;
 // var current_layer_name = "";
 
 var view_width;
@@ -690,15 +703,27 @@ function show_svg() {
 	 return object_url;
 }
 
+var trail_index = 0;
+var trail = [];
+
 // --------------------------------------------------------------------
 function render()
 {
-    $("#mySVG").remove();
+	if (render_trails)
+	{
+		var $last_SVG = $("#mySVG");
+		if ($last_SVG.length)
+		{
+			// $("#mySVG").addClass("fading");
+			$last_SVG.attr("id", `trail_${trail_index}`);
+			$last_SVG.addClass("trail");
+			trail_index += 1;
+			$last_SVG.fadeOut( 250, () => {$last_SVG.remove(); } );
+		}
+	}
 
-   // var svg_elem = generate_svg();
 	var svg_elem = mandala_svg_renderer.renderWithPetals();
-
-    $("body").append(svg_elem);
+	 $("body").append(svg_elem);
 }
 
 
