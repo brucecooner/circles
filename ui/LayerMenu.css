@@ -11,6 +11,7 @@
 	background-color:lightgray;
 	padding: 2px;
 	min-width:10%;
+	z-index:3;
 }
 
 .layersMenu_button {

@@ -35,6 +35,7 @@ MandalaSVGRenderer.MandalaSVGRenderer.prototype.clear = function()
 	this.layer_elements = [];
 };
 
+/*
 // ----------------------------------------------------------------------------
 // only doin' circles for now
 // TODO: could just clone each spoke, then rotate
@@ -125,14 +126,14 @@ MandalaSVGRenderer.MandalaSVGRenderer.prototype.render = function()
 	return svg_elem;
 
 };
-
+*/
 // ============================================================================
 // ============================================================================
 
 // ----------------------------------------------------------------------------
 // only doin' circles for now
 // TODO: could just clone each spoke, then rotate
-MandalaSVGRenderer.MandalaSVGRenderer.prototype.renderLayerWithPetals = function(layer)
+MandalaSVGRenderer.MandalaSVGRenderer.prototype.renderLayer = function(layer)
 {
 	var circle_style = { stroke_width:layer.stroke_width, stroke:layer.stroke, fill:layer.fill };
 
@@ -144,13 +145,13 @@ MandalaSVGRenderer.MandalaSVGRenderer.prototype.renderLayerWithPetals = function
 
 	var svg_elem = `<g data-layer-name="${layer.name}" ${transform_attribute} opacity=${layer.opacity}>`;
 
-	var layer_petal = layer.petal_prototype;
+	// var layer_petal = layer.petal_prototype;
 
 	// generate a template for the spokes
 	var spoke_template = "";
 
 	// ----------------------------------------------------
-	layer_petal.points.forEach( (cur_point) => {
+	layer.points.forEach( (cur_point) => {
 
 		var current_circle = svgee.circle(	cur_point.x, 
 			cur_point.y, 
@@ -189,7 +190,7 @@ MandalaSVGRenderer.MandalaSVGRenderer.prototype.renderLayerWithPetals = function
 
 // ----------------------------------------------------------------------------
 // returns whole enchilada:string
-MandalaSVGRenderer.MandalaSVGRenderer.prototype.renderWithPetals = function()
+MandalaSVGRenderer.MandalaSVGRenderer.prototype.render = function()
 {
 	var width = this.width;
 	var height = this.height;
@@ -203,7 +204,7 @@ MandalaSVGRenderer.MandalaSVGRenderer.prototype.renderWithPetals = function()
 	// loop over its layers or, something
 	this.mandala.layers_order.forEach( (current_layer_name) => {
 
-		var current_element = this.renderLayerWithPetals(this.mandala.getLayer(current_layer_name));
+		var current_element = this.renderLayer(this.mandala.getLayer(current_layer_name));
 		// var current_element = this.renderLayer(this.mandala.getLayer(current_layer_name));
 		this.layer_elements.push(current_element);
 

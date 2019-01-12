@@ -5,7 +5,15 @@
 
 <!--
 TODO:
-SOON...
+
+BUGS:
+* turning fill on/off : no effect
+
+GOOD IDEAS...
+* assign z-indices!
+* only trail edited layer
+* some sort of bundling with module support?
+* BRING BACK THE COLOR JOURNEY!
 * point generator scheme...
 * TESTING???
 *		-is underway at least
@@ -25,9 +33,9 @@ SOON...
 * mirror mode?
 
 CURRENT LAYER(S?) EDITING
-* dismissable editor
+* dismissable editor?
 * dedicated layer edit component
-* the stroke/color thing is getting confusing, sort out
+* cleaner layer parameters editor
 
 LAYER UI STUFF
 * icons would be nice
@@ -135,15 +143,16 @@ svg {
 <script type="application/javascript" src="libs/popupper.js"></script>
 <script type="application/javascript" src="libs/LogChannels.js"></script>
 <script type="application/javascript" src="libs/MiniTester.js"></script>
+<script type="application/javascript" src="libs/MiniValidator.js"></script>
 <script type="application/javascript" src="svgee.js"></script>
 <script type="application/javascript" src="fncColorPicker.js"></script>
-<script type="application/javascript" src="genSinePoints.js"></script>
+<!-- <script type="application/javascript" src="genSinePoints.js"></script> -->
 
-<script type="application/javascript" src="MandalaLayer.js"></script>
-<script type="application/javascript" src="MandalaPetal.js"></script>
-<script type="application/javascript" src="Mandala.js"></script>
-<script type="application/javascript" src="Mandala_tests.js"></script>
-<script type="application/javascript" src="MandalaSVGRenderer.js"></script>
+<script type="application/javascript" src="Mandala/BasePointsGenerator.js"></script>
+<script type="application/javascript" src="Mandala/MandalaLayer.js"></script>
+<script type="application/javascript" src="Mandala/Mandala.js"></script>
+<script type="application/javascript" src="Mandala/Mandala_tests.js"></script>
+<script type="application/javascript" src="Mandala/MandalaSVGRenderer.js"></script>
 <script type="application/javascript" src="Action.js"></script>
 
 <!-- DATA -->
@@ -169,11 +178,16 @@ var Actions = ActionInit();
 LogChannels.EnableChannel(Actions.log_channel, false);
 
 // ----- GLOBALS -----
+// TODO: scope all this stuff
+var app_config = {
+	restore_on_startup: false,
+};
 
 var disabled_color_string = "hsl(0,0%, 50%)";
 var main_log_channel = "index";
 var edit_log_channel = "edit";
 
+var MandalaClass = initMandalaClass();
 var mandala = null;
 var mandala_svg_renderer = null;
 
@@ -259,7 +273,7 @@ function syncLayerEditInputs()
 	var current_layer = getCurrentLayer();
 
 	$("#numSpokesId")[0].value = current_layer.number_of_spokes;
-	$("#spokeLengthId")[0].value = current_layer.spoke_length;
+	$("#spokeLengthId")[0].value = current_layer.length;
 	$("#spokeRotOffsetId")[0].value = current_layer.spoke_rot_offset;
 	$("#circleRadiusId")[0].value = current_layer.radius;
 	$("#strokeWidthId")[0].value = current_layer.stroke_width;
@@ -411,7 +425,8 @@ function setLayerProperty(property_key, layers, value )
 	console.log(main_log_channel, `setLayerProp(${layers[0]}, ${property_key}, ${value})`);
 
 	// model
-	mandala.getLayer(layers[0])[property_key] = value;
+	// mandala.getLayer(layers[0])[property_key] = value;
+	mandala.getLayer(layers[0]).setProperty(property_key, value);
 
 	render();
 };
@@ -530,9 +545,7 @@ Actions.setConfig({action_map:action_map, queue_processing_done_callback:queue_p
 $(document).ready( function()
 {
 	// ---- DATA INIT ----
-	petal_class = initMandalaPetal();
-	mandala_layer_class = MandalaLayerInit(petal_class);
-	mandala = new Mandala(mandala_layer_class);
+	mandala = new MandalaClass();
 	mandala_svg_renderer = new MandalaSVGRenderer.MandalaSVGRenderer(mandala, {width:view_width, height:view_width});
 
 	 // --- DUCTWORK ---
@@ -579,7 +592,7 @@ $(document).ready( function()
         onInputHandler:(value) => {
 			Actions.queueAction(new Actions.Action(	Actions.ActionType.set_layer_property,
 																	[layer_menu.editing_layer],
-																	{value:value, layer_property:"spoke_length"}));
+																	{value:value, layer_property:"length"}));
 		  },
 		  initialValue:0, //default_spoke_length,
 		  wheelStep:1,
@@ -626,7 +639,7 @@ $(document).ready( function()
 	color_picker_dialog = new modalize.Create($("body"), color_picker.$container_div, "colorpick_cover", {left:50,top:20});
 	save_dialog = new SaveDialog.Create();
 
-	// --- UI INIT ---
+	// --- LAYER MENU ---
 	layer_menu = new LayerMenu(mandala, Actions);
 	layer_menu.generateMenu();
 	$("body").append(layer_menu.$menu_content);
@@ -636,7 +649,7 @@ $(document).ready( function()
 	// var new_layer = handleAction_addLayer({});
 	// restore?
 	var mandala_json = localStorage.getItem(storage_key_mandala);
-	if (null !== mandala_json)
+	if (null !== mandala_json && app_config.restore_on_startup)
 	{
 		Actions.queueAction(new Actions.Action(Actions.ActionType.restore, []));
 	}
@@ -722,7 +735,7 @@ function render()
 		}
 	}
 
-	var svg_elem = mandala_svg_renderer.renderWithPetals();
+	var svg_elem = mandala_svg_renderer.render();
 	 $("body").append(svg_elem);
 }
 

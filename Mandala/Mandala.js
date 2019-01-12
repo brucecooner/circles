@@ -6,13 +6,18 @@
 //	* layer types (with common aspects)
 // * layer order iterator?
 //	* proper channel names fergoodnesssake
+function initMandalaClass()
+{
+
+var LayerClass = initMandalaLayerClass();
+
 class Mandala
 {
 	get className()					{ return "Mandala"; };
 	get channelName()					{ return "Mandala" };
 
 	// -------------------------------------------------------------------------
-	constructor(LayerClass)
+	constructor()
 	{
 		this.LayerClass = LayerClass;
 
@@ -158,7 +163,7 @@ class Mandala
 		// use keys of default parameters to tell what to copy out of existing_layer
 		// TODO: this should of course eventually be done by a function in the eventual class layer
 		// Object.keys(this.layer_default_parameters).forEach( (current_parameter) =>
-		Object.keys(existing_layer.default_parameters).forEach( (current_parameter) =>		
+		Object.keys(existing_layer.defaultLayerParameters).forEach( (current_parameter) =>		
 		{
 			new_layer[current_parameter] = existing_layer[current_parameter];
 		});
@@ -327,9 +332,79 @@ class Mandala
 			console.log(log_channel, "all tests passed");
 		}
 	};
+};	// end Mandala
+
+return Mandala;
 };
 
+/*
+	// =========================================================================
+	// TESTING
+	has_all_expected_parameters()
+	{
+		var missing_properties = [];
 
+		Object.keys(default_basepoints_parameters).forEach( (current_key) => {
+			if (!this.hasOwnProperty(current_key))
+			{
+				missing_properties.push(current_key);
+			}
+		});
 
+		if (missing_properties.length)
+		{
+			throw `petal is missing properties ${missing_properties.join()}`;
+		}
+	}
 
+	// -------------------------------------------------------------------------
+	all_parameters_within_ranges()
+	{
+		var out_of_range_properties = [];
 
+		if (this.number_of_points <= 0 || this.number_of_points > this.get_max_number_of_points)
+		{ out_of_range_properties.push("number_of_points"); };
+
+		// if (Math.abs(this.amplitude) > this.max_amplitude)
+		// { out_of_range_properties.push("amplitude");	}
+
+		// if (this.length <= 0 || this.length > this.max_length)
+		// { out_of_range_properties.push("length"); }
+
+		// if (Math.abs(this.end_rot) > this.max_sine_rot)
+		// { out_of_range_properties.push("end_rot"); }
+
+		if (sine_length < this.min_sine_length || sine_length > this.max_sine_length)
+		{ out_of_range_properties.push("sine_length"); }
+
+		if (out_of_range_properties.length)
+		{
+			throw `properties ${out_of_range_properties.join()} were out of range`;
+		}
+	}
+
+	// -------------------------------------------------------------------------
+	// returns error array if errors, [] otherwise
+	testIntegrity()
+	{
+		var results = [];
+
+		var test_list = [
+			"has_all_expected_parameters",
+			"all_parameters_within_ranges",
+		];
+
+		var integrity_tester = new MiniTester("mandala int chk", this, test_list );
+
+		var results = integrity_tester.test();
+
+		if (results.tests_failed > 0)
+		{
+			results.messages.forEach( (current_message) => {
+				results.push(current_message);
+			});
+		}
+
+		return results;
+	};
+ */
