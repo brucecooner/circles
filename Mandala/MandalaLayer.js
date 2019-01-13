@@ -19,7 +19,7 @@ function initMandalaLayerClass()
 		// layer
 		number_of_spokes:	6,
 		length:				50,
-		mirror:false,	// if true, base points are mirrored 
+		mirror:				false,	// if true, base points are mirrored 
 
 		// base points
 		number_of_points:	1,
@@ -41,12 +41,12 @@ function initMandalaLayerClass()
 	var layer_validators = {
 		number_of_spokes:	{ max:100, min:1 },
 		length:				{ max:500, min:0 },
-		mirror:false,	// if true, base points are mirrored 
+		mirror:false,	// if true, base points are mirrored around x-axis
 		// base points
 		number_of_points:	{ min:1, max:150 },	// number of points along petal
 		sine_length:		{ min:Math.PI, max:Math.PI*4 }, // hard to explain
 		amplitude:			{ min:0, max:100 },
-		spoke_rot_offset:	{ min:-Math.PI, max:Math.PI },
+		spoke_rot_offset:	{ min:0, max:Math.PI * 2},
 		// circle related
 		radius:				{ min:2, max:500 },
 		// style related
@@ -91,12 +91,11 @@ function initMandalaLayerClass()
 						this[current_key] = parameters[current_key];
 					}
 				});
-			}
-			
-			// not strictly graphically related parameters we are interested in
-			if (parameters.hasOwnProperty("name"))
-			{
-				this.name = parameters.name;
+
+				if (parameters.hasOwnProperty("name"))
+				{
+					this.name = parameters.name;
+				}
 			}
 
 			this.base_points = [];
@@ -105,22 +104,48 @@ function initMandalaLayerClass()
 			// specifies action on setting of specific parameters
 			this.property_set_callbacks = {
 				// base points affected
-				number_of_points:		function() { this.generateBasePoints(); this.generatePoints(); }.bind(this),
-				sine_length:			function() { this.generateBasePoints(); this.generatePoints(); }.bind(this),
-				amplitude:				function() { this.generateBasePoints(); this.generatePoints(); }.bind(this),
+				number_of_points:		function() { this.regenerate_base_points = true; }.bind(this),
+				sine_length:			function() { this.regenerate_base_points = true; }.bind(this),
+				amplitude:				function() { this.regenerate_base_points = true; }.bind(this),
 				// non-base points affected
-				number_of_spokes:		function() { this.generatePoints(); }.bind(this),
-				length:					function() { this.generatePoints(); }.bind(this),				
+				number_of_spokes:		function() { this.regenerate_points = true; }.bind(this),
+				length:					function() { this.regenerate_points = true; }.bind(this),
+				mirror:					function() { this.regenerate_points = true; }.bind(this),
 				};
 
 			this.generateBasePoints();
 			this.generatePoints();
+
+			this.regenerate_base_points = false;
+			this.regenerate_points = false;
 		};
+
+		// ------------------------------------------------------------
+		preRender()
+		{
+			if (this.regenerate_base_points)
+			{
+				this.generateBasePoints();
+				this.regenerate_points = true;
+			}
+
+			if (this.regenerate_points)
+			{
+				this.generatePoints();
+			}
+
+			this.regenerate_base_points = false;
+			this.regenerate_points = false;
+		}
 
 		// ------------------------------------------------------------
 		setProperty(property_name, value)
 		{
 			console.log(this.log_channel, `setProperty(${property_name},${value})`);
+			if (typeof property_name === "undefined")
+			{
+				throw `setProperty() called with undefined property_name`;
+			}
 
 			if (this.validate_on_every_property_set)
 			{
@@ -170,6 +195,14 @@ function initMandalaLayerClass()
 					cur_point.y = 0;
 				}
 				this.points.push(cur_point);
+
+				// do not mirror points very very near x-axis
+				if (this.mirror && Math.abs(cur_point.y) > 0.001)
+				{
+					var mirror_point = { x:cur_point.x, y:cur_point.y };
+					mirror_point.y *= -1;
+					this.points.push(mirror_point);
+				}
 			});
 		};
 

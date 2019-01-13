@@ -7,10 +7,11 @@
 TODO:
 
 BUGS:
-* petal rotation limited to PI
-* use default layer params to intialize range inputs
+* make sine wave point gen start at rot=0
+* clone broken again
 
 GOOD IDEAS...
+* use default layer params to intialize range inputs
 * assign z-indices
 * only trail edited layer?
 * some sort of bundling with module support?
@@ -29,6 +30,7 @@ GOOD IDEAS...
 * TESTING???
 * is underway at least
 * better integration of layer integrity testing with mandala
+* testing/validation that can optionally throw
 
 * Mandala
 * render order iterator?
@@ -282,6 +284,7 @@ function syncLayerEditInputs()
 	$("#strokeWidthId")[0].value = current_layer.stroke_width;
 	$("#numPointsId")[0].value = current_layer.number_of_points;
 	$("#spokeEndRotId")[0].value = current_layer.spoke_end_rot;
+	$("#mirrorPointsChkId").prop("checked", current_layer.mirror);
 
 	syncLayerEditStrokeControls(current_layer.strokeOn, current_layer.stroke);
 	syncLayerEditFillControls(current_layer.fillOn, current_layer.fill);
@@ -763,6 +766,7 @@ function render()
 		}
 	}
 
+	mandala.preRender();
 	var svg_elem = mandala_svg_renderer.render();
 	 $("body").append(svg_elem);
 }
@@ -852,83 +856,11 @@ function onFillEnabledChange()
 }
 
 // ----------------------------------------------------------------------------
-var amplitude = 1;
-var num_points = 100;
-function sineTest()
+function onMirrorChange()
 {
-	var max_x = view_width * 0.75;
-
-	$("#mySVG").remove();
-
-	var width = view_width;
-	var height = view_height;
-	var x = -width / 2;
-	var y = -height / 2;
-
-	x= 0; 
-
-var svg_elem = `<svg width="100%" height="100%" id="mySVG" viewbox="${x} ${y} ${width} ${height}">`;
-
-	var lines = "";
-	lines += svgee.line(0,-100, 0, 100, {stroke:"rgb(200,200,200)", stroke_width:1});
-	lines += svgee.line(0,0, max_x, 0, {stroke:"rgb(200,200,200)", stroke_width:1});
-
-	svg_elem += lines;
-
-	last_x = 0; last_y = 0;
-
-	var total_distance = 0.0;
-
-	var frequency = 1 / num_points;
-	for (var index = 1; index <= num_points; index += 1)
-	{
-		var cur_t = index * frequency;
-		var cur_y = Math.sin(Math.PI*2 * cur_t) * amplitude;
-		var cur_x = cur_t * max_x;
-
-		var cur_line = svgee.line(last_x, last_y, cur_x, cur_y, {stroke:"black"});
-		svg_elem += cur_line;
-
-		// dist
-		var delta_x = cur_x - last_x;
-		var delta_y = cur_y - last_y;
-		total_distance += Math.sqrt( (delta_x*delta_x) + (delta_y*delta_y) );
-
-		last_x = cur_x;
-		last_y = cur_y;
-		
-	}
-
-	svg_elem += lines;
-
-	last_x = 0; last_y = 0;
-
-	for (var index = 1; index <= num_points; index += 1)
-	{
-		var cur_t = index * frequency;
-		var cur_y = Math.sin(Math.PI*2 * cur_t) * amplitude;
-		var cur_x = cur_t * max_x;
-
-		var cur_line = svgee.line(last_x, last_y, cur_x, cur_y, {stroke:"black"});
-		svg_elem += cur_line;
-
-		// dist
-		var delta_x = cur_x - last_x;
-		var delta_y = cur_y - last_y;
-		total_distance += Math.sqrt( (delta_x*delta_x) + (delta_y*delta_y) );
-
-		last_x = cur_x;
-		last_y = cur_y;
-		
-	}
-
-
-
-	svg_elem += "</svg>";
-
-	$("body").append(svg_elem);
-
-	console.log(`total distance = ${total_distance} `);
+	Actions.queueAction(	new Actions.Action(Actions.ActionType.set_layer_property, 
+								[layer_menu.editing_layer],
+								{ layer_property:"mirror", value:$("#mirrorPointsChkId").prop("checked") }));
 }
 
 </script>
@@ -956,6 +888,7 @@ var svg_elem = `<svg width="100%" height="100%" id="mySVG" viewbox="${x} ${y} ${
 
 		<!-- ??? -->
 		<tr><td>end rot</td><td id="spokeEndRotRangeContainer"></td></tr>
+		<tr><td>mirror</td><td><input id="mirrorPointsChkId" onChange="onMirrorChange();" type="checkbox"></td></tr>
 	</table>
 	 <input type="checkbox" id="strokeEnabledChkId" onChange="onStrokeEnabledChange();">
 	 <button id="strokeColorPickButtonId" class="pickColorButton" onclick="onPickColor(true)">sss</button>

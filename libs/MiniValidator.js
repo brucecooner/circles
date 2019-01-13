@@ -1,8 +1,8 @@
 /* TODO:
 * class with functions for easier use (just get values, report to console, etc.)
 * make non-validated parameter reporting optional
+* optionally throw (for easier detection)
 */
-
 function generateValidatorFunctions(validators_obj)
 {
 	// -------------------------------------------------------------------------
