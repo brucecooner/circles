@@ -7,69 +7,83 @@
 TODO:
 
 BUGS:
-* make sine wave point gen start at rot=0
-* clone broken again
+* seeing "undefined" in a few places in the DOM
+	-opacity in some svg layers
 
-GOOD IDEAS...
-* use default layer params to intialize range inputs
-* assign z-indices
-* only trail edited layer?
-* some sort of bundling with module support?
-* BRING BACK THE COLOR JOURNEY!
-
-* zoom in/out
+GENERAL EDITOR:
+* window resize handling
+* zoom in/out?
+* undo?
 * globals into a scope (named editor maybe?)
-* better defaults mgmt/surfacing?
-* split out layer types (eventually)
-* do proper accessors on stuff
+* config
+*	-restore on startup
+* 	-BRING BACK THE COLOR JOURNEY!
+* assign proper z-indices
+* only trail edited layer?
 * separate data func. from interface (working on it)
-	-what's left here?
-* ID EVERYTHING! (working on it)
 * styles to dedicated css
+
+LAYER EDIT MENU
+* enabled/disabled controls based on layer parameter values
+* dismissable editor?
+* cleaner layer parameters editor
+*	-broken into sections
+* "wheel capture" -> wheel continues to edit last touched control over main window
+
+LAYER MENU...MENU
+* icons would be nice
+* expandable layer menu?
+* layer visibility? (control alpha probably)
+* ensure correct sync between render order - layer list order?
+* move layer up/down
+* configurable layer names
+	-will users even care about layer names?
+	-is there some other way to 'name' or indicate layers?
+* better representation of layers in list
+	-lack of stroke => ???
+
+DEV OPS:
+* some sort of bundling with module support?
+
+DOWNLOAD:
+* 	-de-grouped output mode?
+*		-will probably have to cascade transforms!
+* 	-inkscape compatible layer support
 
 * TESTING???
 * is underway at least
-* better integration of layer integrity testing with mandala
-* testing/validation that can optionally throw
+* better integration of layer integrity testing with mandala integrity test
+* testing/validation that can optionally throw exceptions?
+* test all interface functions, sort-of-e2e
 
 * Mandala
 * render order iterator?
 * sorta need hidden UUID for layer keys instead of relying on name
-* mirror mode?
 
-CURRENT LAYER(S?) EDITING
-* dismissable editor?
-* dedicated layer edit component
-* cleaner layer parameters editor
+* LAYERS
+* split out layer types (eventually)
+* inner radius
+* end rotation
+* reverse (if !mirrored)
+* make sine wave point gen start at rot=0
 
-LAYER UI STUFF
-* icons would be nice
-* expandable layer menu?
-* layer visibility (control alpha probably)
-* ensure correct sync between render order - layer list order
-* move layer up/down
-* configurable layer names
-	-will users even care about layer names?
-	-is there some other way to 'name' layers?
+RENDERING
+* rendered layer caching
 
 COLORS
 * all around better color handling
-	- need saturation/lightness controls
+*	- ???
 * color picker?
 	- better placement, feedback?
-
+	- need saturation/lightness controls in picker!
 
 MODAL NEEDS
 * dismissal callback?
 
-LESS SOON...
-* undo?
-* svg features support
+SVG
+* more primitives support
 	- lines
 	- layers
-* window resize handling (is ok for now)
-
-LATER...
 
 WAY LATER...
 * animation
@@ -151,26 +165,23 @@ svg {
 <script type="application/javascript" src="libs/MiniValidator.js"></script>
 <script type="application/javascript" src="svgee.js"></script>
 <script type="application/javascript" src="fncColorPicker.js"></script>
-<!-- <script type="application/javascript" src="genSinePoints.js"></script> -->
 
+<!-- MODEL -->
 <script type="application/javascript" src="Mandala/BasePointsGenerator.js"></script>
 <script type="application/javascript" src="Mandala/MandalaLayer.js"></script>
 <script type="application/javascript" src="Mandala/Mandala.js"></script>
 <script type="application/javascript" src="Mandala/Mandala_tests.js"></script>
 <script type="application/javascript" src="Mandala/MandalaSVGRenderer.js"></script>
+
+
 <script type="application/javascript" src="Action.js"></script>
 
-<!-- DATA -->
-<!-- <script type="application/javascript" src="layers.js"></script> -->
 
  <!-- UI -->
  <link rel="stylesheet" type="text/css" href="ui/LayerMenu.css">
  <script type="application/javascript" src="ui/LayerMenu.js"></script>
 
 <script type="application/javascript" src="ui/save_dialog.js"></script>
-
-<!-- <link rel="stylesheet" type="text/css" href="ui/edit_layer_popup.css">
-<script type="application/javascript" src="ui/edit_layer_popup.js"></script> -->
 
 <script type="application/javascript">
 
@@ -283,7 +294,7 @@ function syncLayerEditInputs()
 	$("#circleRadiusId")[0].value = current_layer.radius;
 	$("#strokeWidthId")[0].value = current_layer.stroke_width;
 	$("#numPointsId")[0].value = current_layer.number_of_points;
-	$("#spokeEndRotId")[0].value = current_layer.spoke_end_rot;
+	// $("#spokeEndRotId")[0].value = current_layer.spoke_end_rot;
 	$("#mirrorPointsChkId").prop("checked", current_layer.mirror);
 
 	syncLayerEditStrokeControls(current_layer.strokeOn, current_layer.stroke);
@@ -554,19 +565,25 @@ $(document).ready( function()
 	mandala = new MandalaClass();
 	mandala_svg_renderer = new MandalaSVGRenderer.MandalaSVGRenderer(mandala, {width:view_width, height:view_width});
 
+	// gain access to layer validators to get range extents
+	var temp_layer = new mandala.LayerClass();
+	var ranges = temp_layer.LayerValidators;
+	var defaults = temp_layer.defaultLayerParameters;
+
 	 // --- DUCTWORK ---
 	 // TODO: move editor elements to their own class/component
     // num circles
-    let numSpokesRangeCallback = myRangeInput.createRange({id:'numSpokesId',
-        containerId:'numSpokesRangeContainer',
-        onInputHandler:(value) => { 
-			  Actions.queueAction(new Actions.Action(	Actions.ActionType.set_layer_property,
-																	  [layer_menu.editing_layer],
-																	  {value:value, layer_property:"number_of_spokes"}));
+		let numSpokesRangeCallback = myRangeInput.createRange({id:'numSpokesId',
+			containerId:'numSpokesRangeContainer',
+			onInputHandler:(value) => { 
+				Actions.queueAction(new Actions.Action(	Actions.ActionType.set_layer_property,
+																		[layer_menu.editing_layer],
+																		{value:value, layer_property:"number_of_spokes"}));
 			}, 
-		  initialValue:0, //default_number_of_spokes,
-		  wheelStep:1,
-        min:1, max:100, step:1})
+			initialValue:defaults.number_of_spokes,
+			step:1, wheelStep:1,
+			min:ranges.number_of_spokes.min, max:ranges.number_of_spokes.max,
+			});
 
 	// num points
 	let numPointsRangeCallback = myRangeInput.createRange({id:'numPointsId',
@@ -576,11 +593,12 @@ $(document).ready( function()
 																	  [layer_menu.editing_layer],
 																	  {value:value, layer_property:"number_of_points"}));
 			},
-			initialValue:1,
-			wheelStep:1,
-			min:1, max:100, step:1});
+			initialValue:defaults.number_of_points,
+			step:1, wheelStep:1,
+			min:ranges.number_of_points.min, max:ranges.number_of_points.max });
 
 	// spoke end rotation
+	/*
 	let spokeEndRotRangeCallback = myRangeInput.createRange({id:'spokeEndRotId',
 			containerId:'spokeEndRotRangeContainer',
 			onInputHandler:(value) => {
@@ -591,6 +609,7 @@ $(document).ready( function()
 			initialValue:0,
 			wheelStep:Math.PI / 180, // 1 degree
 			min:-Math.PI, max:Math.PI, step:0.01});  
+	*/
 
 	 // spoke length
     let spokeLengthRangeCallback = myRangeInput.createRange({id:'spokeLengthId',
@@ -600,9 +619,9 @@ $(document).ready( function()
 																	[layer_menu.editing_layer],
 																	{value:value, layer_property:"length"}));
 		  },
-		  initialValue:0, //default_spoke_length,
-		  wheelStep:1,
-        min:0, max:500, step:1})
+		  initialValue:defaults.length,
+		  step:1, wheelStep:1,
+        min:ranges.length.min, max:ranges.length.max })
 
     // spoke_rot_offset
     let spokeRotOffsetRangeCallback = myRangeInput.createRange({id:'spokeRotOffsetId',
@@ -612,9 +631,9 @@ $(document).ready( function()
 																	[layer_menu.editing_layer], 
 																	{value:value, layer_property:"spoke_rot_offset"}));
 		  },
-		  initialValue:0, //default_spoke_rot_offset,
-		  wheelStep:Math.PI / 180,	// 1 degree
-        min:0, max:Math.PI * 2, step:0.01})
+		  initialValue:defaults.spoke_rot_offset,
+		  step:Math.PI / 180, wheelStep:Math.PI / 180,
+        min:ranges.spoke_rot_offset.min, max:ranges.spoke_rot_offset.max })
 
     // radius
     let circleRadiusRangeCallback = myRangeInput.createRange({id:'circleRadiusId',
@@ -624,9 +643,9 @@ $(document).ready( function()
 																	[layer_menu.editing_layer], 
 																	{value:value, layer_property:"radius"}));
 		  },
-        initialValue:0, //default_circle_radius,
-		  wheelStep:1,
-        min:5, max:500, step:1});
+        initialValue:defaults.radius,
+		  step:1, wheelStep:1,
+        min:ranges.radius.min, max:ranges.radius.max});
 
     // stroke_width
     let strokeWidthRangeCallback = myRangeInput.createRange({id:'strokeWidthId',
@@ -636,9 +655,9 @@ $(document).ready( function()
 																	[layer_menu.editing_layer],
 																	{value:value, layer_property:"stroke_width"}));
 		  },
-		  initialValue:0, //default_stroke_width,
-		  wheelStep:1,
-        min:1, max:20, step:1});
+		  initialValue:defaults.stroke_width,
+		  step:1, wheelStep:1,
+        min:ranges.stroke_width.min, max:ranges.stroke_width.max });
 	 
 	// wavesRangeContainer
 	let sineWavesRangeCallback = myRangeInput.createRange({id:"petalWavesRangeId",
@@ -648,9 +667,9 @@ $(document).ready( function()
 																	[layer_menu.editing_layer],
 																	{value:value, layer_property:"sine_length"}));
 		  },
-		  initialValue:0,
-		  wheelStep:Math.PI / 180, // 1 degree
-		  min:Math.PI, max:Math.PI * 4, step:Math.PI / 180 });
+		  initialValue:defaults.sine_length,
+		  step:Math.PI / 180, wheelStep:0.01, // 1 degree-ish
+		  min:ranges.sine_length.min, max:ranges.sine_length.max });
 
     // amplitude 
     let amplitudeRangeCallback = myRangeInput.createRange({id:'amplitudeId',
@@ -660,9 +679,9 @@ $(document).ready( function()
 																	[layer_menu.editing_layer],
 																	{value:value, layer_property:"amplitude"}));
 		  },
-		  initialValue:0, //default_stroke_width,
-		  wheelStep:1,
-        min:1, max:100, step:1});
+		  initialValue:0,
+		  step:1, wheelStep:0.5,
+        min:ranges.amplitude.min, max:ranges.amplitude.max });
 
 
 	// --- UI INIT ---
@@ -887,7 +906,7 @@ function onMirrorChange()
 		<tr><td>stroke</td><td id="strokeWidthRangeContainer"></td></tr>
 
 		<!-- ??? -->
-		<tr><td>end rot</td><td id="spokeEndRotRangeContainer"></td></tr>
+		<!-- <tr><td>end rot</td><td id="spokeEndRotRangeContainer"></td></tr> -->
 		<tr><td>mirror</td><td><input id="mirrorPointsChkId" onChange="onMirrorChange();" type="checkbox"></td></tr>
 	</table>
 	 <input type="checkbox" id="strokeEnabledChkId" onChange="onStrokeEnabledChange();">

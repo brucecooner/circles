@@ -30,8 +30,8 @@ class LayerMenu
 	get clone_button_id()		{ return `${this.clone_button_class}_id`; };
 	get save_button_class()		{ return `${this.button_class}_save`; };
 	get save_button_id()			{ return `${this.save_button_class}_id`; };
-	get load_button_class()		{ return `${this.button_class}_load`; };
-	get load_button_id()			{ return `${this.load_button_class}_id`; };
+	get restore_button_class()	{ return `${this.button_class}_restore`; };
+	get restore_button_id()		{ return `${this.restore_button_class}_id`; };
 	get download_button_class(){ return `${this.button_class}_download`; };
 	get download_button_id()	{ return `${this.download_button_class}_id`; };
 	// table

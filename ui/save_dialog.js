@@ -22,7 +22,7 @@ var SaveDialog =
 		this.text_input_id = "saveFilenameTextInputId";
 		this.default_savefile_name = "mandala.svg";
 
-		this.$container = $(`<div id="${this.continer_id}" onclick="event.stopPropagation()"></div>`);
+		this.$container = $(`<div id="${this.container_id}" onclick="event.stopPropagation()"></div>`);
 		this.$container.css( {	"position":"absolute",
 								"background-color":"rgb(100,100,100)",
 								"border":"2px solid black",
