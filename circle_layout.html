@@ -10,6 +10,19 @@ BUGS:
 * seeing "undefined" in a few places in the DOM
 	-opacity in some svg layers
 
+* Mandala
+* render order iterator?
+* sorta need hidden UUID for layer keys instead of relying on name
+
+* LAYERS
+* split out layer types (eventually)
+* inner radius
+* end rotation
+* reverse (if !mirrored)
+* make sine wave point gen start at rot=0
+* value transitions
+*	-want a general transition class for this?
+
 GENERAL EDITOR:
 * window resize handling
 * zoom in/out?
@@ -22,6 +35,7 @@ GENERAL EDITOR:
 * only trail edited layer?
 * separate data func. from interface (working on it)
 * styles to dedicated css
+* "guide" lines
 
 LAYER EDIT MENU
 * enabled/disabled controls based on layer parameter values
@@ -55,17 +69,6 @@ DOWNLOAD:
 * better integration of layer integrity testing with mandala integrity test
 * testing/validation that can optionally throw exceptions?
 * test all interface functions, sort-of-e2e
-
-* Mandala
-* render order iterator?
-* sorta need hidden UUID for layer keys instead of relying on name
-
-* LAYERS
-* split out layer types (eventually)
-* inner radius
-* end rotation
-* reverse (if !mirrored)
-* make sine wave point gen start at rot=0
 
 RENDERING
 * rendered layer caching
@@ -267,6 +270,15 @@ var current_fill_color = WatchedValue.Create(	{hue:100, saturation:100, lightnes
 									render();
 									}]);
 
+// --------------------------------------------------------
+// enables/disables controls based on state of current layer
+function enableDisableLayerEditControls(layer)
+{
+	// if only one point in petal...
+	$("#mirrorPointsChkId").prop("disabled", ( layer.number_of_points == 1 || layer.amplitude == 0));
+	$("#petalWavesRangeId").prop("disabled", ( layer.number_of_points == 1 || layer.amplitude == 0));
+}
+
 // ----------------------------------------------------------------------------
 function syncLayerEditStrokeControls(stroke_enabled, stroke_color_string)
 {
@@ -294,11 +306,14 @@ function syncLayerEditInputs()
 	$("#circleRadiusId")[0].value = current_layer.radius;
 	$("#strokeWidthId")[0].value = current_layer.stroke_width;
 	$("#numPointsId")[0].value = current_layer.number_of_points;
+	$("#petalWavesRangeId")[0].value = current_layer.sine_length;
 	// $("#spokeEndRotId")[0].value = current_layer.spoke_end_rot;
 	$("#mirrorPointsChkId").prop("checked", current_layer.mirror);
 
 	syncLayerEditStrokeControls(current_layer.strokeOn, current_layer.stroke);
 	syncLayerEditFillControls(current_layer.fillOn, current_layer.fill);
+
+	enableDisableLayerEditControls(current_layer);
 };
 
 // ----------------------------------------------------------------------------
@@ -444,6 +459,8 @@ function setLayerProperty(property_key, layers, value )
 	// model
 	// mandala.getLayer(layers[0])[property_key] = value;
 	mandala.getLayer(layers[0]).setProperty(property_key, value);
+
+	enableDisableLayerEditControls(getCurrentLayer());
 
 	render();
 };
@@ -899,8 +916,8 @@ function onMirrorChange()
 		<!-- base parameters -->
 		<tr><td>num</td><td id="numPointsRangeContainer"></td></tr>
 		<tr><td>radius</td><td id="circleRadiusRangeContainer"></td></tr>
-		<tr><td>waves</td><td id="wavesRangeContainer"></td></tr>
 		<tr><td>amp</td><td id="amplitudeRangeContainer"></td></tr>
+		<tr><td>wavy</td><td id="wavesRangeContainer"></td></tr>
 
 		<!-- style parameters -->
 		<tr><td>stroke</td><td id="strokeWidthRangeContainer"></td></tr>
