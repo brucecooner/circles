@@ -11,10 +11,13 @@ BUGS:
 	-opacity in some svg layers
 
 * Mandala
+* OVERALL rotation?
 * render order iterator?
 * sorta need hidden UUID for layer keys instead of relying on name
+* presets (seed of life, etc.)
 
 * LAYERS
+* layer-layers
 * split out layer types (eventually)
 * inner radius
 * end rotation
@@ -33,12 +36,11 @@ GENERAL EDITOR:
 * 	-BRING BACK THE COLOR JOURNEY!
 * assign proper z-indices
 * only trail edited layer?
-* separate data func. from interface (working on it)
 * styles to dedicated css
 * "guide" lines
+* save multiples
 
 LAYER EDIT MENU
-* enabled/disabled controls based on layer parameter values
 * dismissable editor?
 * cleaner layer parameters editor
 *	-broken into sections
@@ -915,16 +917,17 @@ function onMirrorChange()
 
 		<!-- base parameters -->
 		<tr><td>num</td><td id="numPointsRangeContainer"></td></tr>
-		<tr><td>radius</td><td id="circleRadiusRangeContainer"></td></tr>
 		<tr><td>amp</td><td id="amplitudeRangeContainer"></td></tr>
 		<tr><td>wavy</td><td id="wavesRangeContainer"></td></tr>
+		<tr><td>mirror</td><td><input id="mirrorPointsChkId" onChange="onMirrorChange();" type="checkbox"></td></tr>
+
+		<tr><td>radius</td><td id="circleRadiusRangeContainer"></td></tr>
 
 		<!-- style parameters -->
 		<tr><td>stroke</td><td id="strokeWidthRangeContainer"></td></tr>
 
 		<!-- ??? -->
 		<!-- <tr><td>end rot</td><td id="spokeEndRotRangeContainer"></td></tr> -->
-		<tr><td>mirror</td><td><input id="mirrorPointsChkId" onChange="onMirrorChange();" type="checkbox"></td></tr>
 	</table>
 	 <input type="checkbox" id="strokeEnabledChkId" onChange="onStrokeEnabledChange();">
 	 <button id="strokeColorPickButtonId" class="pickColorButton" onclick="onPickColor(true)">sss</button>

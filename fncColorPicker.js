@@ -19,6 +19,7 @@ var fncColorPicker =
 	Create: function(config)
 	{
 		// --------------------------------------------------------------------------
+		// draws center cirlce in hue, looks like
 		// better name, this is more render-y than set-y
 		this.setHue = function(hue)
 		{
@@ -91,7 +92,7 @@ var fncColorPicker =
 		//								width:number }
 		this.renderWheel = function(config)
 		{
-			const slice_sweep_rads = (Math.PI*2) / config.num_slices;
+			const slice_sweep_rads = (Math.PI * 2) / config.num_slices;
 
 			for (var cur_slice = 0; cur_slice < config.num_slices; cur_slice += 1)
 			{
