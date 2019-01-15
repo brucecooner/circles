@@ -152,44 +152,17 @@ var fncColorPicker =
 			this.renderWheel(this.hue_instapick_wheel_config, hueStrokeFn.bind(this));
 		}
 
-		// ----------------------------------------------------------------------
-		// this.renderSaturationSetWheel = function()
-		// {
-		// 	function satStrokeFn(slice_normalized, context, config)
-		// 	{
-		// 		var current_sat = Math.floor( slice_normalized * 100 );
-		// 		context.strokeStyle = `hsl(${this.hue},${current_sat}%,50%)`;
-		// 	};
+		// receives:
+		//		hue:number (0..360)
+		this.calculateCurrentColorSliceBegin = function(at_hue)
+		{
+			const degs_to_rads = (Math.PI / 180);
 
-		// 	satStrokeFn.bind(this);
-
-		// 	this.renderWheel(this.sat_set_wheel_config, satStrokeFn.bind(this));
-		// }
-
-		// ----------------------------------------------------------------------
-		// this.renderLightnessSetWheel = function()
-		// {
-		// 	function lightStrokeFn(slice_normalized, context, config)
-		// 	{
-		// 		var current_light = Math.floor( slice_normalized * 100 );
-		// 		context.strokeStyle = `hsl(${this.hue},100%,${current_light}%)`;
-		// 	};
-
-		// 	this.renderWheel(this.lightness_set_wheel_config, lightStrokeFn.bind(this));
-		// }
-
-		// // ----------------------------------------------------------------------
-		// this.renderMonochromeWheel = function()
-		// {
-		// 	function monochromeStroke(slice_normalized, context, config)
-		// 	{
-		// 		var current_lightness = Math.floor(slice_normalized * 100);
-		// 		context.strokeStyle = `hsl(0,0%,${current_lightness}%)`;
-		// 	};
-
-		// 	this.renderWheel(this.monochrome_wheel_config, monochromeStroke);
-		// };
-
+			var begin = this.hue_instapick_wheel_config.begin_offset_radians + (at_hue * degs_to_rads);
+			begin -= this.current_color_slice_sweep_rads / 2;
+			return begin;
+		};
+		
 		// ======================================================================
 		// ======================================================================
 		// ======================================================================
@@ -227,21 +200,24 @@ var fncColorPicker =
 			sat_gradient_start_radius: hue_wheel_outer_radius - 70, // + (hue_wheel_outer_radius - hue_wheel_inner_radius) / 2,
 		};
 
-		// combines saturation and lightness into one wheel
-		this.combined_color_wheel_config = {
-			num_slices:175,
-			begin_offset_radians: -45 * degs_to_rads,
-			sweep_radians: two_pi - (90 * degs_to_rads),
-			inner_radius:1, //this.current_color_circle_radius,
-			outer_radius:this.hue_instapick_wheel_config.inner_radius - 10,
-		};
+		this.current_color_slice_sweep_rads = 45 * degs_to_rads;
 
 		this.current_color_wheel_slice_config = {
 			num_slices:1,
-			begin_offset_radians: -(90 + 45) * degs_to_rads,
-			sweep_radians: 90 * degs_to_rads,
-			inner_radius:1, //this.current_color_circle_radius,
-			outer_radius:this.hue_instapick_wheel_config.inner_radius - 5,
+			begin_offset_radians: this.calculateCurrentColorSliceBegin(this.hue), //-(90 + 45) * degs_to_rads,
+			sweep_radians: this.current_color_slice_sweep_rads,
+			inner_radius:1, 
+			outer_radius:this.hue_instapick_wheel_config.inner_radius,
+		};
+
+
+		// combines saturation and lightness into one wheel
+		this.combined_color_wheel_config = {
+			num_slices:175,
+			begin_offset_radians: this.calculateCurrentColorSliceBegin(this.hue) + this.current_color_slice_sweep_rads,
+			sweep_radians: two_pi - this.current_color_slice_sweep_rads,
+			inner_radius:1, 
+			outer_radius:this.hue_instapick_wheel_config.inner_radius - 10,
 		};
 
 		this.$container_div = $("<div></div>");
@@ -273,6 +249,17 @@ var fncColorPicker =
 				this.saturation = 100;
 				this.lightness = 50;
 				// todo: show hue arrow
+				var current_color_slice_begin_rads = this.calculateCurrentColorSliceBegin(this.hue);
+				this.current_color_wheel_slice_config.begin_offset_radians = current_color_slice_begin_rads;
+
+				console.log("cur color begin: " + current_color_slice_begin_rads);
+
+				var combined_color_wheel_begin_rads = current_color_slice_begin_rads;
+				combined_color_wheel_begin_rads += this.current_color_slice_sweep_rads;
+				this.combined_color_wheel_config.begin_offset_radians = combined_color_wheel_begin_rads;
+
+				console.log("combined color begin: " + combined_color_wheel_begin_rads);
+
 				this.renderCombinedColorWheel();
 				this.drawCurrentColor();
 			}
@@ -325,6 +312,7 @@ var fncColorPicker =
 		// ---- RENDER ----
 		this.renderHueInstaPickWheel();
 		this.renderCombinedColorWheel();
+		this.drawCurrentColor();
 
 		return this;
 	},	// end Create
