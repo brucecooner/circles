@@ -704,7 +704,7 @@ $(document).ready( function()
 
 
 	// --- UI INIT ---
-	color_picker = new fncColorPicker.Create({color_picked_handler:onColorPicked, size:250, container_div_id:"colorpick", hue:current_stroke_color.hue, rot_offset:-Math.PI * 0.5});
+	color_picker = new fncColorPicker.Create({color_picked_handler:onColorPicked, size:250, container_div_id:"colorpick", hue:0, rot_offset:-Math.PI * 0.5});
 	color_picker_dialog = new modalize.Create($("body"), color_picker.$container_div, "colorpick_cover", {left:50,top:20});
 	save_dialog = new SaveDialog.Create();
 

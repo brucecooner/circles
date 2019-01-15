@@ -5,8 +5,9 @@
 
 // TODO: validate config
 // TODO: configurable background color?
-// TODO: functionize
+// TODO: functionize <== ??
 // TODO: make pieces percentages of size
+// TODO: sort out exact detection of being "over" something
 
 var fncColorPicker =
 {
@@ -21,44 +22,45 @@ var fncColorPicker =
 		// --------------------------------------------------------------------------
 		// draws center cirlce in hue, looks like
 		// better name, this is more render-y than set-y
-		this.setHue = function(hue)
+		this.drawCurrentColor = function()
 		{
-			var canvas = this.$wheel_canvas[0];
-
-			var context = canvas.getContext('2d');
-
-			// probably should be in a function or, something
-			context.beginPath();
-			context.arc(	this.container_center_point.x, this.container_center_point.x, 
-								this.center_circle_radius, 
-								0, 2 * Math.PI, false);
-			context.fillStyle = `hsl(${hue},100%,50%)`;
-			context.fill();
-			context.lineWidth = 1;
-			context.strokeStyle = '#AAAAAA';
-			context.stroke();
-		}
-
-		// --------------------------------------------------------------------------
-		this.isOverColorWheel = function(x, y)
-		{
-			// (radius - stroke_width/2) <= point <= (radius + stroke_width/2)
-			var over_wheel = false;
-
-			var test_point = new fnc2d.Point(x,y);
-			var distance = test_point.delta(this.container_center_point).length();
-
-			if (		(distance >= (this.wheel_radius - (this.wheel_stroke_width / 2))) 
-					&& (distance <= (this.wheel_radius + (this.wheel_stroke_width / 2))) )
+			function currentColorStrokeFn(slice_normalized, context, config)
 			{
-				over_wheel = true;
-			}
+				context.strokeStyle = `hsl(${this.hue}, ${this.saturation}%, ${this.lightness}%)`;
+			};
 
-			return over_wheel;
+			this.renderWheel(this.current_color_wheel_slice_config, currentColorStrokeFn.bind(this));
 		};
 
 		// ----------------------------------------------------------------------
-		this.angleToBasis = function(x, y)
+		// returns: -1 == not over wheel
+		// 0..1 == over wheel, normalized position between wheel start/end
+		this.isOverWheel = function(x,y, wheel_config)
+		{
+			var is_over = -1;
+
+			var delta_x = x - this.container_center_point.x;
+			var delta_y = y - this.container_center_point.y;
+			var distance_from_center = Math.hypot(delta_x, delta_y);
+			var in_radius = wheel_config.inner_radius < distance_from_center
+									&& distance_from_center < wheel_config.outer_radius;
+
+			if (in_radius)
+			{
+				var angle_from_start_of_wheel = this.angleToBasis(x, y, wheel_config.begin_offset_radians);
+
+				if (		0.0 <= angle_from_start_of_wheel >= 0.0 
+						&& angle_from_start_of_wheel <= wheel_config.sweep_radians)
+				{
+					is_over = angle_from_start_of_wheel / (wheel_config.sweep_radians);
+				}
+			}
+			
+			return is_over;
+		}
+
+		// ----------------------------------------------------------------------
+		this.angleToBasis = function(x, y, rot_offset)
 		{
 			var test_point = new fnc2d.Point(x,y);
 			var test_line = this.container_center_point.delta(test_point);
@@ -72,7 +74,7 @@ var fncColorPicker =
 				angle_to_basis = Math.PI * 2 - angle_to_basis;
 			}
 
-			angle_to_basis -= this.rot_offset;
+			angle_to_basis -= rot_offset;
 
 			while (angle_to_basis < 0)
 			{ angle_to_basis += Math.PI * 2; }
@@ -83,47 +85,164 @@ var fncColorPicker =
 		}
 
 		// ======================================================================
-		// receives: config:{	context:canvas_context,
-		//								num_slices:number,
-		//								cx:number,
-		//								cy:number,
-		//								radius:number,
-		//								rot_offset:number,
-		//								width:number }
-		this.renderWheel = function(config)
+		// receives:
+		// config: {}
+		// pre_stroke_fn(normalized_slice, context, config)
+		this.renderWheel = function(config, pre_stroke_fn)
 		{
-			const slice_sweep_rads = (Math.PI * 2) / config.num_slices;
+			var ctx = this.canvas.getContext('2d');
+			// var config = this.hue_pick_wheel_config;
+
+			const slice_sweep_rads = config.sweep_radians / config.num_slices;
+			// const slice_sweep_degrees = slice_sweep_rads * (180 / Math.PI);
+
+			var stroke_width = config.outer_radius - config.inner_radius;
+			var radius = config.outer_radius - (stroke_width / 2);
 
 			for (var cur_slice = 0; cur_slice < config.num_slices; cur_slice += 1)
 			{
-				var start_color = cur_slice * slice_sweep_degrees;
-	
-				config.context.beginPath();
-				config.context.arc(	config.cx, config.cy,
-											config.radius, 
-											config.rot_offset + (cur_slice * slice_sweep_rads),
-											// little extra to cover gaps at ends
-											config.rot_offset + ((cur_slice+1) * slice_sweep_rads + 0.01), 
-											false);
-				// ctx.strokeStyle = gradient;
-				ctx.strokeStyle = `hsl(${cur_slice * slice_sweep_degrees},100%,50%)`;
-				ctx.lineWidth = config.width;
+				ctx.beginPath();
+				ctx.arc(	this.container_size / 2, this.container_size / 2,
+							radius, 
+							config.begin_offset_radians + (cur_slice * slice_sweep_rads),
+							// little extra to cover gaps at ends
+							config.begin_offset_radians + ((cur_slice+1) * slice_sweep_rads + 0.01), 
+							false);
+
+				pre_stroke_fn(cur_slice / config.num_slices, ctx, config);
+
+				ctx.lineWidth = stroke_width;
 				ctx.lineCap = 'butt';
 				ctx.stroke();
 			}	// end for cur_slice
-		};
+		}
+
+		// ----------------------------------------------------------------------
+		this.renderCombinedColorWheel = function()
+		{
+			// same for both axes
+			var x_y = this.container_size /2;
+
+			function combinedColorStrokeFn(slice_normalized, context, config)
+			{
+				// saturation 0 --> 100 over sweep
+				// lightness 0 --> 100 with gradient
+				var current_saturation = Math.floor(slice_normalized * 100);
+				
+				var grd = context.createRadialGradient(	x_y, x_y, config.inner_radius, 
+																x_y, x_y, config.outer_radius);
+				grd.addColorStop(0, `hsl(${this.hue},0%, ${current_saturation}%)`);
+				grd.addColorStop(1, `hsl(${this.hue},100%, ${current_saturation}%)`);
+
+				context.strokeStyle = grd;
+			}
+
+			this.renderWheel(this.combined_color_wheel_config, combinedColorStrokeFn.bind(this));
+		}
+
+		// ----------------------------------------------------------------------
+		this.renderHueInstaPickWheel = function()
+		{
+			function hueStrokeFn(slice_normalized, context, config)
+			{
+				var current_hue = Math.floor( slice_normalized * 360 );
+				context.strokeStyle = `hsl(${current_hue},100%,50%)`;
+			};
+
+			this.renderWheel(this.hue_instapick_wheel_config, hueStrokeFn.bind(this));
+		}
+
+		// ----------------------------------------------------------------------
+		// this.renderSaturationSetWheel = function()
+		// {
+		// 	function satStrokeFn(slice_normalized, context, config)
+		// 	{
+		// 		var current_sat = Math.floor( slice_normalized * 100 );
+		// 		context.strokeStyle = `hsl(${this.hue},${current_sat}%,50%)`;
+		// 	};
+
+		// 	satStrokeFn.bind(this);
+
+		// 	this.renderWheel(this.sat_set_wheel_config, satStrokeFn.bind(this));
+		// }
+
+		// ----------------------------------------------------------------------
+		// this.renderLightnessSetWheel = function()
+		// {
+		// 	function lightStrokeFn(slice_normalized, context, config)
+		// 	{
+		// 		var current_light = Math.floor( slice_normalized * 100 );
+		// 		context.strokeStyle = `hsl(${this.hue},100%,${current_light}%)`;
+		// 	};
+
+		// 	this.renderWheel(this.lightness_set_wheel_config, lightStrokeFn.bind(this));
+		// }
+
+		// // ----------------------------------------------------------------------
+		// this.renderMonochromeWheel = function()
+		// {
+		// 	function monochromeStroke(slice_normalized, context, config)
+		// 	{
+		// 		var current_lightness = Math.floor(slice_normalized * 100);
+		// 		context.strokeStyle = `hsl(0,0%,${current_lightness}%)`;
+		// 	};
+
+		// 	this.renderWheel(this.monochrome_wheel_config, monochromeStroke);
+		// };
 
 		// ======================================================================
-		var default_num_slices = 64;
+		// ======================================================================
+		// ======================================================================
+		// ======================================================================
 		var default_hue = 0;
+		var default_saturation = 100;
+		var default_lightness = 50;
 
 		this.color_picked_handler = config.color_picked_handler;
 		this.container_center_point = new fnc2d.Point(config.size/2, config.size/2);
 		this.container_size = config.size;
 		this.center_circle_radius = 50;
-		this.wheel_stroke_width = 100;	// todo: configure as % of size
-		// TODO: complete control of initial color
+		this.wheel_stroke_width = 100;	// todo: configure as % of size?
+
+		// TODO: add function to set these from outside
 		this.hue = config.hasOwnProperty("hue") ? config.hue : default_hue;
+		this.saturation = config.hasOwnProperty("saturation") ? config.saturation : default_saturation;
+		this.lightness = config.hasOwnProperty("lightness") ? config.lightness : default_lightness;
+
+		// ----- wheel configs -----
+		var hue_wheel_inner_radius = this.center_circle_radius;
+		var hue_wheel_outer_radius = hue_wheel_inner_radius + 30;
+
+		var two_pi = Math.PI * 2;
+		var degs_to_rads = Math.PI / 180;
+
+		// note that zero rotation is due right (positive x)
+		// instantly select pure color
+		this.hue_instapick_wheel_config = {
+			num_slices:200,
+			begin_offset_radians:-Math.PI / 2,	// 90 degrees counter
+			sweep_radians:two_pi, //Math.PI,
+			outer_radius:this.container_size / 2,
+			inner_radius:this.container_size / 2 - 30,
+			sat_gradient_start_radius: hue_wheel_outer_radius - 70, // + (hue_wheel_outer_radius - hue_wheel_inner_radius) / 2,
+		};
+
+		// combines saturation and lightness into one wheel
+		this.combined_color_wheel_config = {
+			num_slices:175,
+			begin_offset_radians: -45 * degs_to_rads,
+			sweep_radians: two_pi - (90 * degs_to_rads),
+			inner_radius:1, //this.current_color_circle_radius,
+			outer_radius:this.hue_instapick_wheel_config.inner_radius - 10,
+		};
+
+		this.current_color_wheel_slice_config = {
+			num_slices:1,
+			begin_offset_radians: -(90 + 45) * degs_to_rads,
+			sweep_radians: 90 * degs_to_rads,
+			inner_radius:1, //this.current_color_circle_radius,
+			outer_radius:this.hue_instapick_wheel_config.inner_radius - 5,
+		};
 
 		this.$container_div = $("<div></div>");
 
@@ -146,20 +265,48 @@ var fncColorPicker =
 
 		this.$container_div.mousemove( function(event) {
 			var coords = getRelativeCoordinates(event, this.$container_div[0]);
-			if (this.isOverColorWheel(coords.x,coords.y))
-			{
-				var angle_to_basis = this.angleToBasis(coords.x,coords.y);
 
-				this.hue = angle_to_basis * (360 / (Math.PI*2));
-				// TODO: make function!
-				// this.$container_div.css("background-color", `hsl(${this.hue},100%,50%)`);
-				this.setHue(this.hue);
+			var instapick_hue_wheel_value = this.isOverWheel(coords.x,coords.y, this.hue_instapick_wheel_config);
+			if ( instapick_hue_wheel_value >= 0)
+			{
+				this.hue = Math.floor(instapick_hue_wheel_value * 360);
+				this.saturation = 100;
+				this.lightness = 50;
+				// todo: show hue arrow
+				this.renderCombinedColorWheel();
+				this.drawCurrentColor();
+			}
+			else 
+			{
+				var combined_color_wheel_value = this.isOverWheel(coords.x, coords.y, this.combined_color_wheel_config);
+
+				if (combined_color_wheel_value >= 0)
+				{
+					// have to extract two axes, saturation and lightness
+					// lightness comes from sweep
+					this.lightness = Math.floor(combined_color_wheel_value * 100);
+					// saturation comes from distance (wheel is conveniently centered at div center )
+					var delta_x = coords.x - this.container_size / 2;
+					var delta_y = coords.y - this.container_size / 2;
+					var distance = Math.hypot(delta_x, delta_y);
+					var normalized_to_wheel = distance / this.combined_color_wheel_config.outer_radius;
+					this.saturation = Math.floor(normalized_to_wheel * 100);
+					this.drawCurrentColor();
+				}
 			}
 		}.bind(this));
 
 		this.$container_div.click( function(event) {
 			event.stopPropagation();
-			this.color_picked_handler({hue:this.hue, saturation:100, lightness:50});
+
+			var coords = getRelativeCoordinates(event, this.$container_div[0]);
+
+			if (		( this.isOverWheel(coords.x, coords.y, this.combined_color_wheel_config) >= 0)
+					||	( this.isOverWheel(coords.x, coords.y, this.current_color_wheel_slice_config) >= 0)
+					||	this.isOverWheel(coords.x, coords.y, this.hue_instapick_wheel_config))
+			{
+				this.color_picked_handler({hue:this.hue, saturation:this.saturation, lightness:this.lightness});
+			}
 		}.bind(this));
 
 		this.$wheel_canvas = $("<canvas></canvas>");
@@ -168,31 +315,16 @@ var fncColorPicker =
 
 		this.$container_div.append(this.$wheel_canvas);
 
-		var canvas = this.$wheel_canvas[0];
+		this.canvas = this.$wheel_canvas[0];
 
-		// todo: move rendering to a function ?
-		var ctx = canvas.getContext('2d');
-
-		var num_slices = config.hasOwnProperty("num_slices") ? config.num_slices : default_num_slices;
 		this.wheel_radius = (this.container_size / 2) - (this.wheel_stroke_width / 2);
-
-		// radians of each slice
-		const slice_sweep_rads = (Math.PI*2) / num_slices;
-		const slice_sweep_degrees = 360.0 / num_slices;
-
-		this.rot_offset = config.hasOwnProperty("rot_offset") ? config.rot_offset : 0;
 
 		// make basis_line that points to rotation zero (without rot_offset)
 		this.basis_line = new fnc2d.Line([0,0], [this.container_size/2, 0]);
 
 		// ---- RENDER ----
-		this.renderWheel( {	context:ctx,
-									num_slices:num_slices,
-									cx:this.container_center_point.x,
-									cy:this.container_center_point.y,
-									radius:this.wheel_radius,
-									rot_offset:this.rot_offset,
-									width:this.wheel_stroke_width } );
+		this.renderHueInstaPickWheel();
+		this.renderCombinedColorWheel();
 
 		return this;
 	},	// end Create
