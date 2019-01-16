@@ -200,7 +200,7 @@ var fncColorPicker =
 			sat_gradient_start_radius: hue_wheel_outer_radius - 70, // + (hue_wheel_outer_radius - hue_wheel_inner_radius) / 2,
 		};
 
-		this.current_color_slice_sweep_rads = 45 * degs_to_rads;
+		this.current_color_slice_sweep_rads = 30 * degs_to_rads;
 
 		this.current_color_wheel_slice_config = {
 			num_slices:1,
@@ -248,17 +248,18 @@ var fncColorPicker =
 				this.hue = Math.floor(instapick_hue_wheel_value * 360);
 				this.saturation = 100;
 				this.lightness = 50;
+
 				// todo: show hue arrow
-				var current_color_slice_begin_rads = this.calculateCurrentColorSliceBegin(this.hue);
-				this.current_color_wheel_slice_config.begin_offset_radians = current_color_slice_begin_rads;
+				// var current_color_slice_begin_rads = this.calculateCurrentColorSliceBegin(this.hue);
+				// this.current_color_wheel_slice_config.begin_offset_radians = current_color_slice_begin_rads;
 
-				console.log("cur color begin: " + current_color_slice_begin_rads);
+				// console.log("cur color begin: " + current_color_slice_begin_rads);
 
-				var combined_color_wheel_begin_rads = current_color_slice_begin_rads;
-				combined_color_wheel_begin_rads += this.current_color_slice_sweep_rads;
-				this.combined_color_wheel_config.begin_offset_radians = combined_color_wheel_begin_rads;
+				// var combined_color_wheel_begin_rads = current_color_slice_begin_rads;
+				// combined_color_wheel_begin_rads += this.current_color_slice_sweep_rads;
+				// this.combined_color_wheel_config.begin_offset_radians = combined_color_wheel_begin_rads;
 
-				console.log("combined color begin: " + combined_color_wheel_begin_rads);
+				// console.log("combined color begin: " + combined_color_wheel_begin_rads);
 
 				this.renderCombinedColorWheel();
 				this.drawCurrentColor();
