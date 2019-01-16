@@ -18,7 +18,8 @@ function initMandalaLayerClass()
 	var default_layer_parameters = {
 		// layer
 		number_of_spokes:	6,
-		length:				50,
+		outer_radius:		50,		// outermost base point
+		inner_radius:		0,			// where base points begin
 		mirror:				false,	// if true, base points are mirrored 
 
 		// base points
@@ -40,7 +41,8 @@ function initMandalaLayerClass()
 	// ----------------------------
 	var layer_validators = {
 		number_of_spokes:	{ max:100, min:1 },
-		length:				{ max:500, min:0 },
+		outer_radius:		{ max:500, min:0 },
+		inner_radius:		{ max:400, min:0 },
 		mirror:false,	// if true, base points are mirrored around x-axis
 		// base points
 		number_of_points:	{ min:1, max:150 },	// number of points along petal
@@ -109,7 +111,8 @@ function initMandalaLayerClass()
 				amplitude:				function() { this.regenerate_base_points = true; }.bind(this),
 				// non-base points affected
 				number_of_spokes:		function() { this.regenerate_points = true; }.bind(this),
-				length:					function() { this.regenerate_points = true; }.bind(this),
+				outer_radius:			function() { this.regenerate_points = true; }.bind(this),
+				inner_radius:			function() { this.regenerate_points = true; }.bind(this),
 				mirror:					function() { this.regenerate_points = true; }.bind(this),
 				};
 
@@ -179,12 +182,14 @@ function initMandalaLayerClass()
 			// need a better name for this?
 			this.points = [];
 
+			var range_scale = this.outer_radius - this.inner_radius;
+
 			// transform base points into 'layer' space
 			// todo: function this!
 			this.base_points.forEach( (current_base_point) => {
 				var cur_point = {};
 				// X
-				cur_point.x = current_base_point.x * this.length;
+				cur_point.x = current_base_point.x * range_scale + this.inner_radius;
 				// Y
 				if (this.amplitude > 0)
 				{

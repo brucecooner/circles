@@ -302,7 +302,8 @@ function syncLayerEditInputs()
 	var current_layer = getCurrentLayer();
 
 	$("#numSpokesId")[0].value = current_layer.number_of_spokes;
-	$("#spokeLengthId")[0].value = current_layer.length;
+	$("#outerRadiusRangeId")[0].value = current_layer.outer_radius;
+	$("#innerRadiusRangeId")[0].value = current_layer.inner_radius;
 	$("#spokeRotOffsetId")[0].value = current_layer.spoke_rot_offset;
 	$("#circleRadiusId")[0].value = current_layer.radius;
 	$("#strokeWidthId")[0].value = current_layer.stroke_width;
@@ -629,17 +630,29 @@ $(document).ready( function()
 			min:-Math.PI, max:Math.PI, step:0.01});  
 	*/
 
-	 // spoke length
-    let spokeLengthRangeCallback = myRangeInput.createRange({id:'spokeLengthId',
-        containerId:'spokeLengthRangeContainer',
+	 // outer radius
+    let outerRadiusRangeCallback = myRangeInput.createRange({id:'outerRadiusRangeId',
+        containerId:'outerRadiusRangeContainer',
         onInputHandler:(value) => {
 			Actions.queueAction(new Actions.Action(	Actions.ActionType.set_layer_property,
 																	[layer_menu.editing_layer],
-																	{value:value, layer_property:"length"}));
+																	{value:value, layer_property:"outer_radius"}));
 		  },
-		  initialValue:defaults.length,
+		  initialValue:defaults.outer_radius,
 		  step:1, wheelStep:1,
-        min:ranges.length.min, max:ranges.length.max })
+        min:ranges.outer_radius.min, max:ranges.outer_radius.max })
+
+	 // inner radius
+    let innerRadiusRangeCallback = myRangeInput.createRange({id:'innerRadiusRangeId',
+        containerId:'innerRadiusRangeContainer',
+        onInputHandler:(value) => {
+			Actions.queueAction(new Actions.Action(	Actions.ActionType.set_layer_property,
+																	[layer_menu.editing_layer],
+																	{value:value, layer_property:"inner_radius"}));
+		  },
+		  initialValue:defaults.inner_radius,
+		  step:1, wheelStep:1,
+        min:ranges.inner_radius.min, max:ranges.inner_radius.max })
 
     // spoke_rot_offset
     let spokeRotOffsetRangeCallback = myRangeInput.createRange({id:'spokeRotOffsetId',
@@ -911,7 +924,8 @@ function onMirrorChange()
 	<table>
 		<!-- layer parameters -->
 		<tr><td>petals</td><td id="numSpokesRangeContainer"></td></tr>
-		<tr><td>length</td><td id="spokeLengthRangeContainer"></td></tr>
+		<tr><td>o rad</td><td id="outerRadiusRangeContainer"></td></tr>
+		<tr><td>i rad</td><td id="innerRadiusRangeContainer"></td></tr>
 		<tr><td>rot</td><td id="spokeRotOffsetRangeContainer"></td></tr>
 
 		<!-- base parameters -->
