@@ -160,6 +160,18 @@ svg {
 }
 /* ------ */
 
+/* if only one circle/point in current layer, disable inner radius control */
+body[data-layer-points="1"] #innerRadiusControlRowId {
+	display:none;
+}
+
+.hintTextClass {
+	position:fixed;
+	left:0px;
+	bottom:0px;
+	margin:5px;
+}
+
 </style>
 
 <script type="application/javascript" src="libs/jquery-3.3.1.js"></script>
@@ -278,6 +290,14 @@ var current_fill_color = WatchedValue.Create(	{hue:100, saturation:100, lightnes
 									}]);
 
 // --------------------------------------------------------
+// sets all attributes used on body element
+function setDataAttributesOnBody()
+{
+	$("body").attr("data-layer-count", mandala.getLayerCount());
+	$("body").attr("data-layer-points", getCurrentLayer().number_of_points);
+}
+
+// --------------------------------------------------------
 // enables/disables controls based on state of current layer
 function enableDisableLayerEditControls(layer)
 {
@@ -285,8 +305,11 @@ function enableDisableLayerEditControls(layer)
 	// $("#mirrorPointsChkId").prop("disabled", ( layer.number_of_points == 1 || layer.amplitude == 0));
 	// $("#petalWavesRangeId").prop("disabled", ( layer.number_of_points == 1 || layer.amplitude == 0));
 
-	// TODO: if only one circle, disable inner radius control
+	// -----
+	// handled with styling now
+	// $("#innerRadiusRangeId").prop("disabled", layer.number_of_points == 1);
 
+	// -----
 	// MUST HAVE one of either stroke or fill enabled at all times
 	// prevents user from turning both off
 
@@ -434,8 +457,7 @@ function handleAction_addLayer(action)
 	layer_menu.addLayer(new_layer.name);
 	layer_menu.setEditingLayer(new_layer.name);
 
-	// TODO: function...
-	$("body").attr("data-layer-count", mandala.getLayerCount());
+	setDataAttributesOnBody();
 
 	render();
 
@@ -474,8 +496,7 @@ function handleAction_deleteLayer(action)
 	// interface
 	layer_menu.removeLayer(action.layers[0]);
 
-	// TODO: function...
-	$("body").attr("data-layer-count", mandala.getLayerCount());
+	setDataAttributesOnBody();
 
 	render();
 }
@@ -491,6 +512,8 @@ function setLayerProperty(property_key, layers, value )
 
 	enableDisableLayerEditControls(getCurrentLayer());
 
+	setDataAttributesOnBody();
+
 	render();
 };
 
@@ -500,6 +523,7 @@ function handleAction_setEditingLayers(action)
 	console.log(main_log_channel, `setEditingLayers()`);
 	console.log(main_log_channel, action.layers);
 
+	setDataAttributesOnBody();
 	syncLayerEditInputs();
 }
 
@@ -673,13 +697,17 @@ $(document).ready( function()
     let innerRadiusRangeCallback = myRangeInput.createRange({id:'innerRadiusRangeId',
         containerId:'innerRadiusRangeContainer',
         onInputHandler:(value) => {
+			  var new_inner_radius = getCurrentLayer().outer_radius * value;
 			Actions.queueAction(new Actions.Action(	Actions.ActionType.set_layer_property,
 																	[layer_menu.editing_layer],
-																	{value:value, layer_property:"inner_radius"}));
+																	{value:new_inner_radius, layer_property:"inner_radius"}));
 		  },
-		  initialValue:defaults.inner_radius,
-		  step:1, wheelStep:1,
-        min:ranges.inner_radius.min, max:ranges.inner_radius.max })
+		//   initialValue:defaults.inner_radius,
+		//   step:1, wheelStep:1,
+      //   min:ranges.inner_radius.min, max:ranges.inner_radius.max })
+		  initialValue:0.0,
+		  step:0.1, wheelStep:0.1,
+        min:0.0, max:1.0 })
 
     // spoke_rot_offset
     let spokeRotOffsetRangeCallback = myRangeInput.createRange({id:'spokeRotOffsetId',
@@ -766,8 +794,15 @@ $(document).ready( function()
 		$("#restoreButtonId").prop("disabled", true);
 		Actions.queueAction(new Actions.Action(Actions.ActionType.add_layer, []));
 	}
-	
-	// petal = new petalClass({amplitude:20, number_of_points:20});
+
+	// -----
+	$("[data-hint]").mouseenter( (elem) => {
+		$("#hintTextId").text($(elem.target).attr('data-hint'));
+	});
+
+	$("[data-hint]").mouseleave( (elem) => {
+		$("#hintTextId").text("");
+	});
 
 	render();
 });
@@ -950,13 +985,13 @@ function onMirrorChange()
 <div class="menuBarClass" id="menuBarId">
 	<table>
 		<!-- layer parameters -->
-		<tr><td>petals</td><td id="numSpokesRangeContainer"></td></tr>
-		<tr><td>o rad</td><td id="outerRadiusRangeContainer"></td></tr>
-		<tr><td>i rad</td><td id="innerRadiusRangeContainer"></td></tr>
-		<tr><td>rot</td><td id="spokeRotOffsetRangeContainer"></td></tr>
-
+		<tr><td>rays</td><td id="numSpokesRangeContainer" data-hint="number of rays"></td></tr>
 		<!-- base parameters -->
-		<tr><td>num</td><td id="numPointsRangeContainer"></td></tr>
+		<tr><td>num</td><td id="numPointsRangeContainer" data-hint="number of circles along ray"></td></tr>
+		<tr><td>rot</td><td id="spokeRotOffsetRangeContainer" data-hint="rotation of rays"></td></tr>
+		<tr><td>radius</td><td id="outerRadiusRangeContainer" data-hint="outer radius"></td></tr>
+		<tr id="innerRadiusControlRowId" data-hint="starting radius"><td>inner</td><td id="innerRadiusRangeContainer"></td></tr>
+
 
 		<!-- 
 		<tr><td>amp</td><td id="amplitudeRangeContainer"></td></tr>
@@ -964,18 +999,21 @@ function onMirrorChange()
 		<tr><td>mirror</td><td><input id="mirrorPointsChkId" onChange="onMirrorChange();" type="checkbox"></td></tr> 
 		-->
 
-		<tr><td>radius</td><td id="circleRadiusRangeContainer"></td></tr>
+		<tr data-hint="size of circles along ray"><td>size</td><td id="circleRadiusRangeContainer"></td></tr>
 
 		<!-- style parameters -->
-		<tr><td>stroke</td><td id="strokeWidthRangeContainer"></td></tr>
+		<tr data-hint="stroke width"><td>stroke</td><td id="strokeWidthRangeContainer"></td></tr>
 
 		<!-- ??? -->
 		<!-- <tr><td>end rot</td><td id="spokeEndRotRangeContainer"></td></tr> -->
 	</table>
-	 <input type="checkbox" id="strokeEnabledChkId" onChange="onStrokeEnabledChange();">
-	 <button id="strokeColorPickButtonId" class="pickColorButton" onclick="onPickColor(true)">sss</button>
-	 <input type="checkbox" id="fillEnabledChkId" onChange="onFillEnabledChange();">
-	 <button id="fillColorPickButtonId" class="pickColorButton" onclick="onPickColor(false)">fff</button>
+	 <input type="checkbox" id="strokeEnabledChkId" onChange="onStrokeEnabledChange();" data-hint="toggle stroke">
+	 <button id="strokeColorPickButtonId" class="pickColorButton" onclick="onPickColor(true)" data-hint="pick stroke color">sss</button>
+	 <input type="checkbox" id="fillEnabledChkId" onChange="onFillEnabledChange();" data-hint="toggle fill">
+	 <button id="fillColorPickButtonId" class="pickColorButton" onclick="onPickColor(false)" data-hint="pick fill color">fff</button>
+</div>
+
+<div id="hintTextId" class="hintTextClass">
 </div>
 
 <!-- <svg width="100%" height="100%" id="mySVG" viewbox="0 0 110 110"> -->

@@ -127,40 +127,48 @@ class LayerMenu
 		this.$add_button.addClass( `${this.button_class} ${this.add_button_class}`);
 		this.$add_button.attr({ "id":this.add_button_id });
 		this.$add_button.click( (event) => {this.sendAction(Actions.ActionType.add_layer); } );
+		this.$add_button.attr("data-hint", "add new layer");
 
 		this.$delete_button = $('<button>X</button>');
 		this.$delete_button.attr("id", this.delete_button_id)
 		this.$delete_button.addClass(`${this.button_class} ${this.delete_button_class}`);
 		this.$delete_button.click( (event) => {this.sendAction(Actions.ActionType.delete_layer); } );
+		this.$delete_button.attr("data-hint", "delete current layer");
 
 		this.$new_button = $('<button>N</button>');
 		this.$new_button.attr("id", this.new_button_id)
 		this.$new_button.addClass(`${this.button_class} ${this.new_button_class}`);
 		this.$new_button.click( (event) => {this.sendAction(Actions.ActionType.new_document); } );
+		this.$new_button.attr("data-hint", "new layout (start over)");
 
 		this.$clone_button = $('<button>C</button>');
 		this.$clone_button.attr("id", this.clone_button_id)
 		this.$clone_button.addClass(`${this.button_class} ${this.clone_button_class}`);
 		this.$clone_button.click( (event) => {this.sendAction(Actions.ActionType.clone_layer); } );
+		this.$clone_button.attr("data-hint", "clone current layer");
 
 		this.$save_button = $('<button>save</button>');
 		this.$save_button.attr("id", this.save_button_id)
 		this.$save_button.addClass(`${this.button_class} ${this.save_button_class}`);
 		this.$save_button.click( (event) => {this.sendAction(Actions.ActionType.save); } );
+		this.$save_button.attr("data-hint", "save current layout");
 
 		this.$restore_button = $('<button>restore</button>');
 		this.$restore_button.attr("id", this.restore_button_id)
 		this.$restore_button.addClass(`${this.button_class} ${this.restore_button_class}`);
 		this.$restore_button.click( (event) => {this.sendAction(Actions.ActionType.restore); } );
+		this.$restore_button.attr("data-hint", "restore last saved layout");
 
-		this.$download_button = $('<button>download</button>');
+		this.$download_button = $('<button>export</button>');
 		this.$download_button.attr("id", this.download_button_id)
 		this.$download_button.addClass(`${this.button_class} ${this.download_button_class}`);
 		this.$download_button.click( (event) => {this.sendAction(Actions.ActionType.download); } );
+		this.$download_button.attr("data-hint", "save layout to svg file");
 
 		this.$table = $('<table></table>');
 		this.$table.attr({ "id":this.table_id});
 		this.$table.addClass(this.table_class );
+		this.$table.attr("data-hint", "click a layer name to edit");
 
 		this.$container_div.append(this.$add_button);
 		this.$container_div.append(this.$delete_button);
