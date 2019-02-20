@@ -23,11 +23,13 @@ function initMandalaLayerClass()
 		mirror:				false,	// if true, base points are mirrored 
 
 		// base points
-		number_of_points:	1,
+		number_of_points:	1,			// how many points occur from 0..1
 		sine_length:		Math.PI,
 		amplitude:			0,
 
 		spoke_rot_offset:	0,
+
+		base_points_type: 'straight',	// one of 'straight', 'sine', ???
 
 		// circle related
 		radius:				20,
@@ -43,10 +45,8 @@ function initMandalaLayerClass()
 		number_of_spokes:	{ max:100, min:1 },
 		outer_radius:		{ max:500, min:0 },
 		inner_radius:		{ max:400, min:0 },
-		mirror:false,	// if true, base points are mirrored around x-axis
-		// base points
-		number_of_points:	{ min:1, max:150 },	// number of points along petal
-		sine_length:		{ min:Math.PI, max:Math.PI*4 }, // hard to explain
+		number_of_points:	{ min:1, max:150 },	
+		sine_length:		{ min:Math.PI, max:Math.PI*4 },
 		amplitude:			{ min:0, max:100 },
 		spoke_rot_offset:	{ min:0, max:Math.PI * 2},
 		// circle related
@@ -78,10 +78,20 @@ function initMandalaLayerClass()
 		constructor(parameters)
 		{
 			this.log_channel = this.className;
+
+			// set up special validate functions
+			this.LayerValidators.outer_radius.validate_fn = this.validateOuterRadius.bind(this);
+			this.LayerValidators.inner_radius.validate_fn = this.validateInnerRadius.bind(this);
+
 			var validator_functions = generateValidatorFunctions(this.LayerValidators);
 			this.validateParametersFn = validator_functions.validateObject;
 			this.validateValueFn = validator_functions.validateValue;
 
+			// this.special_validator_fns = {
+			// 	"inner_radius": this.validateInnerRadius.bind(this),
+			// 	"outer_radius": this.validateOuterRadius.bind(this),
+			// };
+		
 			Object.assign(this, this.defaultLayerParameters);
 
 			if (parameters)
@@ -103,6 +113,12 @@ function initMandalaLayerClass()
 			this.base_points = [];
 			this.points = [];
 
+			// base point generators
+			this.base_point_generators_map = {
+				'straight': this.generateBasePointsStraight.bind(this),
+				'sine': this.generateBasePointsSine.bind(this),
+			};
+
 			// specifies action on setting of specific parameters
 			this.property_set_callbacks = {
 				// base points affected
@@ -121,7 +137,7 @@ function initMandalaLayerClass()
 
 			this.regenerate_base_points = false;
 			this.regenerate_points = false;
-		};
+		};	// end constructor
 
 		// ------------------------------------------------------------
 		preRender()
@@ -148,6 +164,7 @@ function initMandalaLayerClass()
 			if (typeof property_name === "undefined")
 			{
 				throw `setProperty() called with undefined property_name`;
+				return;
 			}
 
 			if (this.validate_on_every_property_set)
@@ -156,8 +173,13 @@ function initMandalaLayerClass()
 
 				if (false == result.passed)
 				{
+					console.log(this.log_channel, "validation failed: " + result);
 					console.log(this.log_channel, "NOT setting value");
 					return;
+				}
+				else
+				{
+					console.log(this.log_channel, "parameter validation passed");
 				}
 			}
 
@@ -170,9 +192,29 @@ function initMandalaLayerClass()
 		}
 
 		// ------------------------------------------------------------
+		generateBasePointsStraight()
+		{
+			console.log(this.log_channel, "generateBasePointsStraight()");
+		}
+
+		// ------------------------------------------------------------
+		generateBasePointsSine()
+		{
+			console.log(this.log_channel, "generateBasePointsStraight()");
+		}
+
+		// ------------------------------------------------------------
 		generateBasePoints()
 		{
+			console.log(this.log_channel, "generateBasePoints()");
+
+			if (this.base_point_generators_map.hasOwnProperty(this.base_points_type))
+			{
+				this.base_point_generators_map[this.base_points_type]();
+			}
+
 			this.base_points = [];
+
 			this.base_points = BasePointsGeneratorFn(this);
 		}
 
@@ -225,20 +267,46 @@ function initMandalaLayerClass()
 		};
 
 		// ------------------------------------------------------------
+		validateOuterRadius(value)
+		{
+			var result = "";
+
+			// cannot exceed outer radius
+			if (value <= this.inner_radius)
+			{
+				result = "outer radius must be greater than inner_radius";
+			}
+
+			return result;
+		}
+
+		// ------------------------------------------------------------
+		validateInnerRadius(value)
+		{
+			var result = "";
+
+			// cannot exceed outer radius
+			if (value >= this.outer_radius)
+			{
+				result = "inner radius must be less than outer radius";
+			}
+
+			return result;
+		}
+
+		// ------------------------------------------------------------
 		validateParameter(name, value)
 		{
-			var results = this.validateValueFn(name, value);
+			var result = this.validateValueFn(name, value);
 
-			if ( results.no_validator)
+			// TODO: should do this log call somewhere else
+			if (false == result.passed)
 			{
-				console.log(this.log_channel, `WARNING: validaing property "${name}", but no validator exists`);
-			}
-			else if (results.invalid_value)
-			{
-				console.log(this.log_channel, `property "${name}" out of range`);
+				// console.log(this.log_channel, `property "${name}" out of range`);
+				console.log(this.log_channel, result.reason);
 			}
 
-			return results;
+			return result;
 		}
 
 		// ------------------------------------------------------------
@@ -261,21 +329,15 @@ function initMandalaLayerClass()
 				{
 					console.log(this.log_channel, `missing properties: ${result.missing_properties.join()}`);
 				}
-				if (result.invalid_values.length)
-				{
-					console.log(this.log_channel, `invalid properties: ${result.invalid_values.join()}`);
-				}
-				if (result.non_validated_properties.length)
-				{
-					console.log(this.log_channel, `non-validated properties: ${result.non_validated_properties.join()}`);
-				}
+				Object.keys(result.failed_values).forEach( (current_property) => {
+					console.log(this.log_channel, `${current_property}: result.failed_values[current_property]`);
+				});
 			}
 
 			return result;
 		};
 
 	};	// end MandalaLayer
-
 
 	return MandalaLayer;
 };

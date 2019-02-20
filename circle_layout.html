@@ -1,7 +1,7 @@
 <html>
 
 <head>
-<title>myndala</title>
+<title>Lots o' Circles</title>
 
 <!--
 TODO:
@@ -9,6 +9,9 @@ TODO:
 BUGS:
 * seeing "undefined" in a few places in the DOM
 	-opacity in some svg layers
+* layers created while stroke is disabled don't have background color
+* layers created while stroke is disabled don't show color when it's activated
+* clone option should be disabled if there are no layers
 
 * Mandala
 * OVERALL rotation?
@@ -20,6 +23,8 @@ BUGS:
 * layer-layers
 * split out layer types (eventually)
 * inner radius
+*	-needs to be constrained so always < outer_radius!
+*	-and validated as such
 * end rotation
 * reverse (if !mirrored)
 * make sine wave point gen start at rot=0
@@ -27,9 +32,10 @@ BUGS:
 *	-want a general transition class for this?
 
 GENERAL EDITOR:
+* amplitude is not syncing on layer change
 * window resize handling
 * zoom in/out?
-* undo?
+* UNDO
 * globals into a scope (named editor maybe?)
 * config
 *	-restore on startup
@@ -276,8 +282,29 @@ var current_fill_color = WatchedValue.Create(	{hue:100, saturation:100, lightnes
 function enableDisableLayerEditControls(layer)
 {
 	// if only one point in petal...
-	$("#mirrorPointsChkId").prop("disabled", ( layer.number_of_points == 1 || layer.amplitude == 0));
-	$("#petalWavesRangeId").prop("disabled", ( layer.number_of_points == 1 || layer.amplitude == 0));
+	// $("#mirrorPointsChkId").prop("disabled", ( layer.number_of_points == 1 || layer.amplitude == 0));
+	// $("#petalWavesRangeId").prop("disabled", ( layer.number_of_points == 1 || layer.amplitude == 0));
+
+	// TODO: if only one circle, disable inner radius control
+
+	// MUST HAVE one of either stroke or fill enabled at all times
+	// prevents user from turning both off
+
+	// if fill is off, disable stroke toggling
+	var stroke_chk_enabled = true;
+	if ( false === layer.fillOn )
+	{
+		stroke_chk_enabled = false;
+	}
+	$("#strokeEnabledChkId").prop("disabled", !stroke_chk_enabled );
+
+	// if stroke is off, disable fill toggling
+	var fill_chk_enabled = true;
+	if ( false === layer.strokeOn )
+	{
+		fill_chk_enabled = false;
+	}
+	$("#fillEnabledChkId").prop("disabled", !fill_chk_enabled);
 }
 
 // ----------------------------------------------------------------------------
@@ -308,9 +335,9 @@ function syncLayerEditInputs()
 	$("#circleRadiusId")[0].value = current_layer.radius;
 	$("#strokeWidthId")[0].value = current_layer.stroke_width;
 	$("#numPointsId")[0].value = current_layer.number_of_points;
-	$("#petalWavesRangeId")[0].value = current_layer.sine_length;
+	// $("#petalWavesRangeId")[0].value = current_layer.sine_length;
 	// $("#spokeEndRotId")[0].value = current_layer.spoke_end_rot;
-	$("#mirrorPointsChkId").prop("checked", current_layer.mirror);
+	// $("#mirrorPointsChkId").prop("checked", current_layer.mirror);
 
 	syncLayerEditStrokeControls(current_layer.strokeOn, current_layer.stroke);
 	syncLayerEditFillControls(current_layer.fillOn, current_layer.fill);
@@ -689,7 +716,7 @@ $(document).ready( function()
 		  initialValue:defaults.stroke_width,
 		  step:1, wheelStep:1,
         min:ranges.stroke_width.min, max:ranges.stroke_width.max });
-	 
+/*	 
 	// wavesRangeContainer
 	let sineWavesRangeCallback = myRangeInput.createRange({id:"petalWavesRangeId",
 		  containerId:"wavesRangeContainer",
@@ -713,7 +740,7 @@ $(document).ready( function()
 		  initialValue:0,
 		  step:1, wheelStep:0.5,
         min:ranges.amplitude.min, max:ranges.amplitude.max });
-
+*/
 
 	// --- UI INIT ---
 	color_picker = new fncColorPicker.Create({color_picked_handler:onColorPicked, size:250, container_div_id:"colorpick", hue:0, rot_offset:-Math.PI * 0.5});
@@ -930,9 +957,12 @@ function onMirrorChange()
 
 		<!-- base parameters -->
 		<tr><td>num</td><td id="numPointsRangeContainer"></td></tr>
+
+		<!-- 
 		<tr><td>amp</td><td id="amplitudeRangeContainer"></td></tr>
 		<tr><td>wavy</td><td id="wavesRangeContainer"></td></tr>
-		<tr><td>mirror</td><td><input id="mirrorPointsChkId" onChange="onMirrorChange();" type="checkbox"></td></tr>
+		<tr><td>mirror</td><td><input id="mirrorPointsChkId" onChange="onMirrorChange();" type="checkbox"></td></tr> 
+		-->
 
 		<tr><td>radius</td><td id="circleRadiusRangeContainer"></td></tr>
 
