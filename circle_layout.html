@@ -629,7 +629,8 @@ Actions.setConfig({action_map:action_map, queue_processing_done_callback:queue_p
 // --------------------------------------------------------------------
 // --------------------------------------------------------------------
 // --------------------------------------------------------------------
-$(document).ready( function()
+//$(document).ready( function()
+function finishInit()
 {
 	// ---- DATA INIT ----
 	mandala = new MandalaClass();
@@ -706,7 +707,7 @@ $(document).ready( function()
 		//   step:1, wheelStep:1,
       //   min:ranges.inner_radius.min, max:ranges.inner_radius.max })
 		  initialValue:0.0,
-		  step:0.1, wheelStep:0.1,
+		  step:0.05, wheelStep:0.05,
         min:0.0, max:1.0 })
 
     // spoke_rot_offset
@@ -805,13 +806,15 @@ $(document).ready( function()
 	});
 
 	render();
-});
+};
 
 // --------------------------------------------------------------------
 function onBodyLoad()
 {
     view_width = window.innerWidth;
-    view_height = window.innerHeight;
+	 view_height = window.innerHeight;
+	 
+	 finishInit()
 };
 
 /*
