@@ -19,7 +19,7 @@ function initMandalaLayerClass()
 		// layer
 		number_of_spokes:	6,
 		outer_radius:		50,		// outermost base point
-		inner_radius:		0,			// where base points begin
+		inner_radius:		0,			// where base points begin (NORMALIZED, scalar for outer_radius)
 		mirror:				false,	// if true, base points are mirrored 
 
 		// base points
@@ -44,7 +44,7 @@ function initMandalaLayerClass()
 	var layer_validators = {
 		number_of_spokes:	{ max:100, min:1 },
 		outer_radius:		{ max:500, min:0 },
-		inner_radius:		{ max:400, min:0 },
+		inner_radius:		{ max:1.0, min:0 },
 		number_of_points:	{ min:1, max:150 },	
 		sine_length:		{ min:Math.PI, max:Math.PI*4 },
 		amplitude:			{ min:0, max:100 },
@@ -80,8 +80,8 @@ function initMandalaLayerClass()
 			this.log_channel = this.className;
 
 			// set up special validate functions
-			this.LayerValidators.outer_radius.validate_fn = this.validateOuterRadius.bind(this);
-			this.LayerValidators.inner_radius.validate_fn = this.validateInnerRadius.bind(this);
+			// this.LayerValidators.outer_radius.validate_fn = this.validateOuterRadius.bind(this);
+			// this.LayerValidators.inner_radius.validate_fn = this.validateInnerRadius.bind(this);
 
 			var validator_functions = generateValidatorFunctions(this.LayerValidators);
 			this.validateParametersFn = validator_functions.validateObject;
@@ -224,14 +224,15 @@ function initMandalaLayerClass()
 			// need a better name for this?
 			this.points = [];
 
-			var range_scale = this.outer_radius - this.inner_radius;
+			var inner_radius_calculated = this.inner_radius * this.outer_radius;
+			var range_scale = this.outer_radius - inner_radius_calculated;
 
 			// transform base points into 'layer' space
 			// todo: function this!
 			this.base_points.forEach( (current_base_point) => {
 				var cur_point = {};
 				// X
-				cur_point.x = current_base_point.x * range_scale + this.inner_radius;
+				cur_point.x = current_base_point.x * range_scale + inner_radius_calculated; 
 				// Y
 				if (this.amplitude > 0)
 				{
@@ -265,34 +266,6 @@ function initMandalaLayerClass()
 
 			return return_obj;
 		};
-
-		// ------------------------------------------------------------
-		validateOuterRadius(value)
-		{
-			var result = "";
-
-			// cannot exceed outer radius
-			if (value <= this.inner_radius)
-			{
-				result = "outer radius must be greater than inner_radius";
-			}
-
-			return result;
-		}
-
-		// ------------------------------------------------------------
-		validateInnerRadius(value)
-		{
-			var result = "";
-
-			// cannot exceed outer radius
-			if (value >= this.outer_radius)
-			{
-				result = "inner radius must be less than outer radius";
-			}
-
-			return result;
-		}
 
 		// ------------------------------------------------------------
 		validateParameter(name, value)

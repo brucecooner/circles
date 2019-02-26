@@ -704,7 +704,7 @@ function finishInit()
         containerId:'innerRadiusRangeContainer',
         onInputHandler:(value) => {
 			  console.log(value);
-			  var new_inner_radius = getCurrentLayer().outer_radius * value;
+			  var new_inner_radius = value;
 			Actions.queueAction(new Actions.Action(	Actions.ActionType.set_layer_property,
 																	[layer_menu.editing_layer],
 																	{value:new_inner_radius, layer_property:"inner_radius"}));
