@@ -45,6 +45,9 @@ class LayerMenu
 	get row_editing_td_class()	{ return `${this.row_class}_td_editing`; };
 	row_editing_td_id(layer_name)	{ return `${this.row_editing_td_class}_${layer_name}_id`; };
 
+	get row_editing_cb_class()	{ return `${this.row_class}_cb`; };
+	row_editing_cb_id(layer_name)	{ return `${this.row_editing_cb_class}_${layer_name}_id`; };
+
 	// --- menu action types ---
 	// TODO: use ActionTypes (need external def tho)
 	// get actiontype_add_layer()				{ return "add_layer"};
@@ -63,6 +66,8 @@ class LayerMenu
 		this.name = "LayerMenuClass";
 
 		this.editing_layer = "";
+
+		// this.editing_layers = [];
 	};
 
 	// -------------------------------------------------------------------------
@@ -79,12 +84,14 @@ class LayerMenu
 	// }
 
 	// -------------------------------------------------------------------------
+	// for setting only ONE edit layer
 	setEditingLayer(layer_name)
 	{
 		console.log(this.log_channel, `setEditingLayer: ${layer_name}`);
 
 		this.editing_layer = layer_name;
 		// console.log(this.editing_layer);
+		// this.editing_layers = [ layer_name ];
 
 		$(`.${this.row_class}`).attr("data-editing-layer", false);
 		$(`#${this.row_id(this.editing_layer)}`).attr( "data-editing-layer", true);
@@ -92,6 +99,22 @@ class LayerMenu
 		// TODO:use action defs!
 		this.sendAction(Actions.ActionType.set_editing_layers);
 	}
+
+	// -------------------------------------------------------------------------
+	// addEditingLayer(layer_name)
+	// {
+	// 	this.editing_layers.push(layer_name);
+	// }
+
+	// -------------------------------------------------------------------------
+	// removeEditingLayer(layer_name)
+	// {
+	// 	var index = this.editing_layers.indexOf(layer_name);
+	// 	if (index >= 0)
+	// 	{
+	// 		this.editing_layers.splice(index, 1);
+	// 	}
+	// }
 
 	// -------------------------------------------------------------------------
 	sendAction(action_type)
@@ -122,31 +145,6 @@ class LayerMenu
 		this.$container_div.attr( { "id":this.container_div_id } );
 		this.$container_div.addClass( this.container_div_class );
 
-		// TODO: use a glyph here?
-		this.$add_button = $('<button>+</button>');
-		this.$add_button.addClass( `${this.button_class} ${this.add_button_class}`);
-		this.$add_button.attr({ "id":this.add_button_id });
-		this.$add_button.click( (event) => {this.sendAction(Actions.ActionType.add_layer); } );
-		this.$add_button.attr("data-hint", "add new layer");
-
-		this.$delete_button = $('<button>X</button>');
-		this.$delete_button.attr("id", this.delete_button_id)
-		this.$delete_button.addClass(`${this.button_class} ${this.delete_button_class}`);
-		this.$delete_button.click( (event) => {this.sendAction(Actions.ActionType.delete_layer); } );
-		this.$delete_button.attr("data-hint", "delete current layer");
-
-		this.$new_button = $('<button>N</button>');
-		this.$new_button.attr("id", this.new_button_id)
-		this.$new_button.addClass(`${this.button_class} ${this.new_button_class}`);
-		this.$new_button.click( (event) => {this.sendAction(Actions.ActionType.new_document); } );
-		this.$new_button.attr("data-hint", "new layout (start over)");
-
-		this.$clone_button = $('<button>C</button>');
-		this.$clone_button.attr("id", this.clone_button_id)
-		this.$clone_button.addClass(`${this.button_class} ${this.clone_button_class}`);
-		this.$clone_button.click( (event) => {this.sendAction(Actions.ActionType.clone_layer); } );
-		this.$clone_button.attr("data-hint", "clone current layer");
-
 		this.$save_button = $('<button>save</button>');
 		this.$save_button.attr("id", this.save_button_id)
 		this.$save_button.addClass(`${this.button_class} ${this.save_button_class}`);
@@ -165,20 +163,47 @@ class LayerMenu
 		this.$download_button.click( (event) => {this.sendAction(Actions.ActionType.download); } );
 		this.$download_button.attr("data-hint", "save layout to svg file");
 
+		// TODO: use a glyph here?
+		this.$add_button = $('<button>+</button>');
+		this.$add_button.addClass( `${this.button_class} ${this.add_button_class}`);
+		this.$add_button.attr({ "id":this.add_button_id });
+		this.$add_button.click( (event) => {this.sendAction(Actions.ActionType.add_layer); } );
+		this.$add_button.attr("data-hint", "add new layer");
+
+		this.$delete_button = $('<button>del</button>');
+		this.$delete_button.attr("id", this.delete_button_id)
+		this.$delete_button.addClass(`${this.button_class} ${this.delete_button_class}`);
+		this.$delete_button.click( (event) => {this.sendAction(Actions.ActionType.delete_layer); } );
+		this.$delete_button.attr("data-hint", "delete current layer");
+
+		this.$new_button = $('<button>New</button>');
+		this.$new_button.attr("id", this.new_button_id)
+		this.$new_button.addClass(`${this.button_class} ${this.new_button_class}`);
+		this.$new_button.click( (event) => {this.sendAction(Actions.ActionType.new_document); } );
+		this.$new_button.attr("data-hint", "new layout (start over)");
+
+		this.$clone_button = $('<button>clone</button>');
+		this.$clone_button.attr("id", this.clone_button_id)
+		this.$clone_button.addClass(`${this.button_class} ${this.clone_button_class}`);
+		this.$clone_button.click( (event) => {this.sendAction(Actions.ActionType.clone_layer); } );
+		this.$clone_button.attr("data-hint", "clone current layer");
+
 		this.$table = $('<table></table>');
 		this.$table.attr({ "id":this.table_id});
 		this.$table.addClass(this.table_class );
 		this.$table.attr("data-hint", "click a layer name to edit");
 
-		this.$container_div.append(this.$add_button);
-		this.$container_div.append(this.$delete_button);
 		this.$container_div.append(this.$new_button);
-		this.$container_div.append(this.$clone_button);
 		this.$container_div.append('<br>');
 		this.$container_div.append(this.$save_button);
 		this.$container_div.append(this.$restore_button);
 		this.$container_div.append('<br>');
 		this.$container_div.append(this.$download_button);
+		this.$container_div.append('<br>');
+		this.$container_div.append(this.$add_button);
+		this.$container_div.append(this.$clone_button);
+		this.$container_div.append(this.$delete_button);
+
 		this.$container_div.append(this.$table);
 
 		this.$menu_content = this.$container_div;
@@ -207,13 +232,38 @@ class LayerMenu
 			Actions.queueAction(new Actions.Action(Actions.ActionType.highlight_layer, [layer_name])); } );
 		$name_td.mouseleave( (event) => { 
 			Actions.queueAction(new Actions.Action(Actions.ActionType.highlight_layer, [])); } );
-	
-		var $editing_td = $('<td>_</td>');
-		$editing_td.attr("id", this.row_editing_td_id(layer_name) );
-		$editing_td.addClass( this.row_editing_td_class);
-	
+
+		// like the 'multi-edit' idea, but can't get it to work
+		// var $editing_cb_tc = $("<td></td>");
+		// $editing_cb_tc.attr("id", this.row_editing_td_id(layer_name) );
+		// $editing_cb_tc.addClass( this.row_editing_td_class);
+
+		// var checkbox_class = this.row_editing_cb_class;
+		// var checkbox_id = this.row_editing_cb_id(layer_name);
+
+		// var $input = $('<input />', { type: 'checkbox', id: checkbox_id, value: 'temp', class:checkbox_class, checked:false });
+		// $input.on('change', (target) => {
+		// 	// var $input = $(`#${checkbox_id}`);
+		// 	var is_checked = $(`#${checkbox_id}`).prop("checked");
+		// 	// console.log("is checked:" + is_checked );
+		// 	if (is_checked)
+		// 	{
+		// 		this.addEditingLayer(layer_name);
+		// 	}
+		// 	else
+		// 	{
+		// 		this.removeEditingLayer(layer_name);
+		// 	}
+
+		// 	console.log(this.editing_layers);
+		// 	// asdf
+		// });
+
+		// $input.appendTo($editing_cb_tc);
+
 		$layer_list_row_item.append($name_td);
-		$layer_list_row_item.append($editing_td);
+
+		// $layer_list_row_item.append($editing_cb_tc);
 	
 		return $layer_list_row_item;
 	}
@@ -251,7 +301,7 @@ class LayerMenu
 	}
 
 	// -------------------------------------------------------------------------
-	getEditingLayerNameTd()
+	getEditingLayerNameId()
 	{
 		return $(`#${this.row_name_td_id(this.editing_layer)}`);
 	}
@@ -260,11 +310,10 @@ class LayerMenu
 	// sets background color of editing layer name item
 	setEditingLayerColor(color)
 	{
-		var $editing_name_td = this.getEditingLayerNameTd();
+		var $editing_name_td = this.getEditingLayerNameId();
 
 		$editing_name_td.css( "background-color", color);
 	}
-
 };
 
 

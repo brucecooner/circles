@@ -25,6 +25,7 @@ BUGS:
 * inner radius
 *	-needs to be constrained so always < outer_radius!
 *	-and validated as such
+*	-needs to natively be a normalized value
 * end rotation
 * reverse (if !mirrored)
 * make sine wave point gen start at rot=0
@@ -294,7 +295,11 @@ var current_fill_color = WatchedValue.Create(	{hue:100, saturation:100, lightnes
 function setDataAttributesOnBody()
 {
 	$("body").attr("data-layer-count", mandala.getLayerCount());
-	$("body").attr("data-layer-points", getCurrentLayer().number_of_points);
+
+	if (mandala.getLayerCount() > 0)
+	{
+		$("body").attr("data-layer-points", getCurrentLayer().number_of_points);
+	}
 }
 
 // --------------------------------------------------------
@@ -698,6 +703,7 @@ function finishInit()
     let innerRadiusRangeCallback = myRangeInput.createRange({id:'innerRadiusRangeId',
         containerId:'innerRadiusRangeContainer',
         onInputHandler:(value) => {
+			  console.log(value);
 			  var new_inner_radius = getCurrentLayer().outer_radius * value;
 			Actions.queueAction(new Actions.Action(	Actions.ActionType.set_layer_property,
 																	[layer_menu.editing_layer],

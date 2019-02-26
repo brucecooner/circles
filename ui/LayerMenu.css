@@ -30,7 +30,11 @@
 	background-color:red;
 }
 
+/* if <= 1 layer, do not show delete button */
 body[data-layer-count="0"] #layersMenu_button_delete_id {
+	display:none;
+}
+body[data-layer-count="1"] #layersMenu_button_delete_id {
 	display:none;
 }
 
@@ -48,24 +52,25 @@ body[data-layer-count="0"] #layersMenu_button_delete_id {
 
 .layersMenu_table_row_td_name {
 	margin:0px;
-	border-radius:3px 0px 0px 3px;
-	border-radius: 8px 0px 0px 8px;
+	border-radius: 8px 8px 8px 8px;
+	cursor:default;
 }
 
-.layersMenu_table_row_td_editing {
+/* .layersMenu_table_row_td_editing {
 	margin:0px;
 	background-color:yellow;
-	/* border:1px solid gray; */
-}
-
-/* .layersMenu_table_row[data-editing-layer="true"] .layersMenu_table_row_td_name {
-	padding:0px 10px 0px 0px;
 } */
 
-.layersMenu_table_row[data-editing-layer=false] .layersMenu_table_row_td_editing {
+/* .layersMenu_table_row[data-editing-layer=false] .layersMenu_table_row_td_editing {
 	display:none;
 }
 
 .layersMenu_table_row[data-editing-layer=true] .layersMenu_table_row_td_editing {
 	display:inline;
+} */
+
+/* highlight edited layer */
+.layersMenu_table_row[data-editing-layer=true] .layersMenu_table_row_td_name {
+	border-color:white;
+	border-style:solid;
 }
