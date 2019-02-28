@@ -32,7 +32,10 @@ function initMandalaLayerClass()
 		base_points_type: 'straight',	// one of 'straight', 'sine', ???
 
 		// circle related
-		radius:				20,
+		// circles' radius at beginning of ray
+		start_radius:				20,
+		// circles' radius at end of ray
+		end_radius:					20,
 
 		// style related
 		stroke_width:		1,
@@ -50,7 +53,8 @@ function initMandalaLayerClass()
 		amplitude:			{ min:0, max:100 },
 		spoke_rot_offset:	{ min:0, max:Math.PI * 2},
 		// circle related
-		radius:				{ min:2, max:500 },
+		start_radius:		{ min:2, max:500 },
+		end_radius:			{ min:2, max:500 },
 		// style related
 		stroke_width:		{ min:1, max:20 },
 	};

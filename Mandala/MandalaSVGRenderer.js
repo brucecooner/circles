@@ -150,17 +150,22 @@ MandalaSVGRenderer.MandalaSVGRenderer.prototype.renderLayer = function(layer)
 	// generate a template for the spokes
 	var spoke_template = "";
 
+	// TODO: get rid of hidden coupling to transition_class here!
+	var transition_config = { start:layer.start_radius, end:layer.end_radius, number_of_steps:layer.number_of_points };
+	var radius_transition = new transition_class.Transition( transition_config );
+
 	// ----------------------------------------------------
 	layer.points.forEach( (cur_point) => {
 
 		var current_circle = svgee.circle(	cur_point.x, 
 			cur_point.y, 
-			layer.radius, 
-			"", //`rotate(${in_spoke_transform})`,
+			radius_transition.next(),
+			"", 
 			circle_style);
 
 		spoke_template += current_circle;
 
+		// current_radius += layer.radius_growth;
 	});
 
 // render each spoke
